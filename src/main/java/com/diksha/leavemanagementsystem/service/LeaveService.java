@@ -15,13 +15,13 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.time.temporal.ChronoUnit;
 
 @Service
 @RequiredArgsConstructor
 public class LeaveService {
 
     private final LeaveRepository leaveRepository;
-
     private final EmployeeRepository employeeRepository;
 
     public LeaveResponseDto applyLeave(LeaveRequestDto dto) {
@@ -36,16 +36,26 @@ public class LeaveService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Employee not found"));
 
-        if(dto.getStartDate().isAfter(dto.getEndDate())){
-
-            throw new RuntimeException(
-                    "Start date cannot be after end date");
+        if (dto.getStartDate().isAfter(dto.getEndDate())) {
+            throw new RuntimeException("Start date cannot be after end date");
         }
 
-        if(dto.getStartDate().isBefore(LocalDate.now())){
+        if (dto.getStartDate().isBefore(LocalDate.now())) {
+            throw new RuntimeException("Leave cannot be applied for past dates");
+        }
 
+        // 1. Calculate leave days and validate balance BEFORE saving
+        long leaveDays = calculateLeaveDays(
+                dto.getStartDate(),
+                dto.getEndDate()
+        );
+
+        if (leaveDays > employee.getLeaveBalance()) {
             throw new RuntimeException(
-                    "Leave cannot be applied for past dates");
+                    "Insufficient leave balance. Available: "
+                            + employee.getLeaveBalance()
+                            + " days"
+            );
         }
 
         boolean overlap = leaveRepository
@@ -55,12 +65,11 @@ public class LeaveService {
                         dto.getStartDate()
                 );
 
-        if(overlap){
-
-            throw new RuntimeException(
-                    "Leave already exists for selected dates");
+        if (overlap) {
+            throw new RuntimeException("Leave already exists for selected dates");
         }
 
+        // 2. Build the entity
         LeaveRequest leave = LeaveRequest.builder()
                 .startDate(dto.getStartDate())
                 .endDate(dto.getEndDate())
@@ -71,13 +80,13 @@ public class LeaveService {
                 .employee(employee)
                 .build();
 
+        // 3. Save to database and return at the very end
         return mapToDto(
                 leaveRepository.save(leave)
         );
-
     }
 
-    public List<LeaveResponseDto> getMyLeaves(){
+    public List<LeaveResponseDto> getMyLeaves() {
 
         Authentication authentication =
                 SecurityContextHolder.getContext().getAuthentication();
@@ -93,29 +102,26 @@ public class LeaveService {
                 .stream()
                 .map(this::mapToDto)
                 .toList();
-
     }
 
-    public List<LeaveResponseDto> getAllLeaves(){
+    public List<LeaveResponseDto> getAllLeaves() {
 
         return leaveRepository.findAll()
                 .stream()
                 .map(this::mapToDto)
                 .toList();
-
     }
 
-    public LeaveResponseDto getLeaveById(Long id){
+    public LeaveResponseDto getLeaveById(Long id) {
 
         LeaveRequest leave = leaveRepository.findById(id)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Leave not found"));
 
         return mapToDto(leave);
-
     }
 
-    private LeaveResponseDto mapToDto(LeaveRequest leave){
+    private LeaveResponseDto mapToDto(LeaveRequest leave) {
 
         return LeaveResponseDto.builder()
                 .id(leave.getId())
@@ -125,12 +131,11 @@ public class LeaveService {
                 .leaveType(leave.getLeaveType())
                 .status(leave.getStatus())
                 .appliedOn(leave.getAppliedOn())
-                .employeeName(
-                        leave.getEmployee().getFullName()
-                )
+                .employeeName(leave.getEmployee().getFullName())
+                .totalDays(calculateLeaveDays(leave.getStartDate(), leave.getEndDate()))
                 .build();
-
     }
+
     public String cancelLeave(Long leaveId) {
 
         Authentication authentication =
@@ -158,11 +163,12 @@ public class LeaveService {
         }
 
         leave.setStatus(LeaveStatus.CANCELLED);
-
         leaveRepository.save(leave);
 
         return "Leave cancelled successfully.";
-
     }
 
+    private long calculateLeaveDays(LocalDate startDate, LocalDate endDate) {
+        return ChronoUnit.DAYS.between(startDate, endDate) + 1;
+    }
 }

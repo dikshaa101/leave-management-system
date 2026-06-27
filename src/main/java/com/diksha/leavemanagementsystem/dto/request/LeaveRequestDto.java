@@ -20,4 +20,6 @@ public class LeaveRequestDto {
     @NotNull
     private LeaveType leaveType;
 
+    private Long totalDays;
+
 }

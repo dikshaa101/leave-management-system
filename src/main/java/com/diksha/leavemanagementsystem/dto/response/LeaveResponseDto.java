@@ -27,4 +27,6 @@ public class LeaveResponseDto {
 
     private String employeeName;
 
+    private Long totalDays;
+
 }
