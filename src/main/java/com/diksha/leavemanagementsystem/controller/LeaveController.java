@@ -68,4 +68,16 @@ public class LeaveController {
         );
     }
 
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('EMPLOYEE')")
+    public ApiResponse<String> cancelLeave(@PathVariable Long id) {
+
+        return new ApiResponse<>(
+                true,
+                leaveService.cancelLeave(id),
+                null
+        );
+
+    }
+
 }

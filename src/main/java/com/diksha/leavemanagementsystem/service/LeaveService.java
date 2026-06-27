@@ -131,5 +131,38 @@ public class LeaveService {
                 .build();
 
     }
+    public String cancelLeave(Long leaveId) {
+
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        String username = authentication.getName();
+
+        Employee employee = employeeRepository
+                .findByUserUsername(username)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Employee not found"));
+
+        LeaveRequest leave = leaveRepository.findById(leaveId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Leave not found"));
+
+        // Employee can cancel only their own leave
+        if (!leave.getEmployee().getId().equals(employee.getId())) {
+            throw new RuntimeException("You can cancel only your own leave requests.");
+        }
+
+        // Only pending leave can be cancelled
+        if (leave.getStatus() != LeaveStatus.PENDING) {
+            throw new RuntimeException("Only pending leave requests can be cancelled.");
+        }
+
+        leave.setStatus(LeaveStatus.CANCELLED);
+
+        leaveRepository.save(leave);
+
+        return "Leave cancelled successfully.";
+
+    }
 
 }
