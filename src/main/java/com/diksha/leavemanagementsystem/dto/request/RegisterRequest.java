@@ -1,19 +1,35 @@
 package com.diksha.leavemanagementsystem.dto.request;
 
 import com.diksha.leavemanagementsystem.entity.Role;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import lombok.Data;
+
+import java.time.LocalDate;
 
 @Data
 public class RegisterRequest {
 
-    @NotBlank(message = "Username is required")
+    @NotBlank
     private String username;
 
-    @Size(min = 6, message = "Password should be at least 6 characters")
+    @NotBlank
     private String password;
 
     private Role role;
+
+    @NotBlank
+    private String fullName;
+
+    @Email
+    private String email;
+
+    private String phone;
+
+    private String department;
+
+    private String designation;
+
+    private LocalDate joiningDate;
 
 }

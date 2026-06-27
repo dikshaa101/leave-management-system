@@ -3,6 +3,7 @@ package com.diksha.leavemanagementsystem.service;
 import com.diksha.leavemanagementsystem.dto.request.LoginRequest;
 import com.diksha.leavemanagementsystem.dto.request.RegisterRequest;
 import com.diksha.leavemanagementsystem.dto.response.JwtResponse;
+import com.diksha.leavemanagementsystem.entity.Employee;
 import com.diksha.leavemanagementsystem.entity.User;
 import com.diksha.leavemanagementsystem.repository.UserRepository;
 import com.diksha.leavemanagementsystem.security.JwtUtil;
@@ -41,6 +42,19 @@ public class AuthService {
                 .password(passwordEncoder.encode(request.getPassword()))
                 .role(request.getRole())
                 .build();
+
+        Employee employee = Employee.builder()
+                .fullName(request.getFullName())
+                .email(request.getEmail())
+                .phone(request.getPhone())
+                .department(request.getDepartment())
+                .designation(request.getDesignation())
+                .joiningDate(request.getJoiningDate())
+                .leaveBalance(20)
+                .user(user)
+                .build();
+
+        user.setEmployee(employee);
 
         userRepository.save(user);
 

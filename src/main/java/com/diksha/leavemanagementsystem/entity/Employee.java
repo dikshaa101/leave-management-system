@@ -38,8 +38,8 @@ public class Employee {
     @Builder.Default
     private Integer leaveBalance = 20;
 
-    @OneToOne
-    @JoinColumn(name = "user_id")
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", unique = true)
     private User user;
 
 }
