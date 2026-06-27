@@ -1,4 +1,13 @@
 package com.diksha.leavemanagementsystem.entity;
 
-public class LeaveStatus {
+public enum LeaveStatus {
+
+    PENDING,
+
+    APPROVED,
+
+    REJECTED,
+
+    CANCELLED
+
 }
