@@ -147,7 +147,7 @@ public class LeaveService {
         return "Leave cancelled successfully.";
     }
 
-    private LeaveResponseDto mapToDto(LeaveRequest leave) {
+    public LeaveResponseDto mapToDto(LeaveRequest leave) {
 
         return LeaveResponseDto.builder()
                 .id(leave.getId())
@@ -161,6 +161,8 @@ public class LeaveService {
                 .totalDays(calculateLeaveDays(
                         leave.getStartDate(),
                         leave.getEndDate()))
+                .managerRemarks(leave.getManagerRemarks())
+                .actionDate(leave.getActionDate())
                 .build();
     }
 

@@ -33,12 +33,18 @@ public class LeaveRequest {
 
     private LocalDate appliedOn;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "employee_id")
-    private Employee employee;
-
     @Column(length = 500)
     private String managerRemarks;
 
     private LocalDate actionDate;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "employee_id")
+    private Employee employee;
+
+
+
+
+
+
 }
