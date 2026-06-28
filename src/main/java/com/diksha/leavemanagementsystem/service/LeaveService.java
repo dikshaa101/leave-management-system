@@ -14,8 +14,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -44,7 +44,6 @@ public class LeaveService {
             throw new RuntimeException("Leave cannot be applied for past dates");
         }
 
-        // 1. Calculate leave days and validate balance BEFORE saving
         long leaveDays = calculateLeaveDays(
                 dto.getStartDate(),
                 dto.getEndDate()
@@ -53,8 +52,7 @@ public class LeaveService {
         if (leaveDays > employee.getLeaveBalance()) {
             throw new RuntimeException(
                     "Insufficient leave balance. Available: "
-                            + employee.getLeaveBalance()
-                            + " days"
+                            + employee.getLeaveBalance() + " days"
             );
         }
 
@@ -69,7 +67,6 @@ public class LeaveService {
             throw new RuntimeException("Leave already exists for selected dates");
         }
 
-        // 2. Build the entity
         LeaveRequest leave = LeaveRequest.builder()
                 .startDate(dto.getStartDate())
                 .endDate(dto.getEndDate())
@@ -80,7 +77,6 @@ public class LeaveService {
                 .employee(employee)
                 .build();
 
-        // 3. Save to database and return at the very end
         return mapToDto(
                 leaveRepository.save(leave)
         );
@@ -121,21 +117,6 @@ public class LeaveService {
         return mapToDto(leave);
     }
 
-    private LeaveResponseDto mapToDto(LeaveRequest leave) {
-
-        return LeaveResponseDto.builder()
-                .id(leave.getId())
-                .startDate(leave.getStartDate())
-                .endDate(leave.getEndDate())
-                .reason(leave.getReason())
-                .leaveType(leave.getLeaveType())
-                .status(leave.getStatus())
-                .appliedOn(leave.getAppliedOn())
-                .employeeName(leave.getEmployee().getFullName())
-                .totalDays(calculateLeaveDays(leave.getStartDate(), leave.getEndDate()))
-                .build();
-    }
-
     public String cancelLeave(Long leaveId) {
 
         Authentication authentication =
@@ -152,12 +133,10 @@ public class LeaveService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Leave not found"));
 
-        // Employee can cancel only their own leave
         if (!leave.getEmployee().getId().equals(employee.getId())) {
             throw new RuntimeException("You can cancel only your own leave requests.");
         }
 
-        // Only pending leave can be cancelled
         if (leave.getStatus() != LeaveStatus.PENDING) {
             throw new RuntimeException("Only pending leave requests can be cancelled.");
         }
@@ -168,7 +147,26 @@ public class LeaveService {
         return "Leave cancelled successfully.";
     }
 
-    private long calculateLeaveDays(LocalDate startDate, LocalDate endDate) {
+    private LeaveResponseDto mapToDto(LeaveRequest leave) {
+
+        return LeaveResponseDto.builder()
+                .id(leave.getId())
+                .startDate(leave.getStartDate())
+                .endDate(leave.getEndDate())
+                .reason(leave.getReason())
+                .leaveType(leave.getLeaveType())
+                .status(leave.getStatus())
+                .appliedOn(leave.getAppliedOn())
+                .employeeName(leave.getEmployee().getFullName())
+                .totalDays(calculateLeaveDays(
+                        leave.getStartDate(),
+                        leave.getEndDate()))
+                .build();
+    }
+
+    private long calculateLeaveDays(LocalDate startDate,
+                                    LocalDate endDate) {
+
         return ChronoUnit.DAYS.between(startDate, endDate) + 1;
     }
 }

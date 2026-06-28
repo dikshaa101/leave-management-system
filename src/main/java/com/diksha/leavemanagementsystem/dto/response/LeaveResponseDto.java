@@ -29,4 +29,8 @@ public class LeaveResponseDto {
 
     private Long totalDays;
 
+    private String managerRemarks;
+
+    private LocalDate actionDate;
+
 }

@@ -37,4 +37,8 @@ public class LeaveRequest {
     @JoinColumn(name = "employee_id")
     private Employee employee;
 
+    @Column(length = 500)
+    private String managerRemarks;
+
+    private LocalDate actionDate;
 }
