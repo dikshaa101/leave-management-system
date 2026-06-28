@@ -24,4 +24,11 @@ public interface LeaveRepository extends JpaRepository<LeaveRequest, Long> {
             LocalDate startDate
     );
 
+    List<LeaveRequest> findByStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
+            LeaveStatus status,
+            LocalDate date1,
+            LocalDate date2
+    );
+
+
 }
