@@ -61,4 +61,48 @@ public class TeamAvailabilityService {
                 .build();
     }
 
+    public AvailabilityDto getDepartmentAvailability(String department,
+                                                     LocalDate date) {
+
+        List<Employee> employees =
+                employeeRepository.findByDepartmentIgnoreCase(department);
+
+        List<LeaveRequest> approvedLeaves =
+                leaveRepository
+                        .findByStatusAndEmployeeDepartmentIgnoreCaseAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
+                                LeaveStatus.APPROVED,
+                                department,
+                                date,
+                                date
+                        );
+
+        Set<Long> employeesOnLeaveIds =
+                approvedLeaves.stream()
+                        .map(leave -> leave.getEmployee().getId())
+                        .collect(Collectors.toSet());
+
+        List<String> onLeaveNames =
+                approvedLeaves.stream()
+                        .map(leave -> leave.getEmployee().getFullName())
+                        .distinct()
+                        .toList();
+
+        List<String> availableNames =
+                employees.stream()
+                        .filter(employee ->
+                                !employeesOnLeaveIds.contains(employee.getId()))
+                        .map(Employee::getFullName)
+                        .toList();
+
+        return AvailabilityDto.builder()
+                .totalEmployees(employees.size())
+                .availableEmployees(availableNames.size())
+                .employeesOnLeave(onLeaveNames.size())
+                .availableEmployeeNames(availableNames)
+                .employeesOnLeaveNames(onLeaveNames)
+                .build();
+
+    }
+
+
 }

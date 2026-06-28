@@ -44,4 +44,24 @@ public class TeamController {
         );
     }
 
+    @GetMapping("/availability/department")
+    @PreAuthorize("hasRole('MANAGER')")
+    public ApiResponse<AvailabilityDto> getDepartmentAvailability(
+
+            @RequestParam String department,
+
+            @RequestParam
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate date) {
+
+        return new ApiResponse<>(
+                true,
+                "Department availability fetched successfully.",
+                teamAvailabilityService.getDepartmentAvailability(
+                        department,
+                        date
+                )
+        );
+    }
+
 }

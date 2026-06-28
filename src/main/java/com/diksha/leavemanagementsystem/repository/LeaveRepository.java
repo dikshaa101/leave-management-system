@@ -30,5 +30,12 @@ public interface LeaveRepository extends JpaRepository<LeaveRequest, Long> {
             LocalDate date2
     );
 
+    List<LeaveRequest> findByStatusAndEmployeeDepartmentIgnoreCaseAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
+            LeaveStatus status,
+            String department,
+            LocalDate startDate,
+            LocalDate endDate
+    );
+
 
 }
