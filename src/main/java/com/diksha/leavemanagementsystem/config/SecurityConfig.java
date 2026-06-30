@@ -14,8 +14,10 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.http.HttpStatus;
 
 @Configuration
 @EnableWebSecurity
@@ -52,6 +54,9 @@ public class SecurityConfig {
                         .requestMatchers("/manager/**")
                         .hasRole("MANAGER")
 
+                        .requestMatchers("/team/**")
+                        .hasRole("MANAGER")
+
                         .requestMatchers("/employee/**")
                         .hasAnyRole("EMPLOYEE","MANAGER")
 
@@ -62,6 +67,9 @@ public class SecurityConfig {
                         .authenticated()
 
                 )
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
+
                 .authenticationProvider(authenticationProvider())
 
                 .userDetailsService(customUserDetailsService)
