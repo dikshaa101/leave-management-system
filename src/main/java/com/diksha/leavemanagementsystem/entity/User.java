@@ -29,4 +29,8 @@ public class User {
     @OneToOne(mappedBy = "user",
             cascade = CascadeType.ALL)
     private Employee employee;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "company_id", nullable = false)
+    private Company company;
 }

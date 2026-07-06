@@ -16,7 +16,12 @@ public class RegisterRequest {
     @NotBlank
     private String password;
 
-    private Role role;
+    // Required for everyone
+    @NotBlank
+    private String companyCode;
+
+    // Required only when registering a MANAGER
+    private String companyName;
 
     @NotBlank
     private String fullName;
@@ -31,5 +36,4 @@ public class RegisterRequest {
     private String designation;
 
     private LocalDate joiningDate;
-
 }

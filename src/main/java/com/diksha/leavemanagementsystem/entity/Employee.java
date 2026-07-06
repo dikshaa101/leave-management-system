@@ -43,8 +43,14 @@ public class Employee {
     @JoinColumn(name = "user_id", unique = true)
     private User user;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "company_id", nullable = false)
+    private Company company;
+
     @OneToMany(mappedBy = "employee",
             cascade = CascadeType.ALL)
     private List<LeaveRequest> leaveRequests;
+
+
 
 }

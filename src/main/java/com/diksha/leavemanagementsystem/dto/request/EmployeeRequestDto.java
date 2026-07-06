@@ -2,6 +2,8 @@ package com.diksha.leavemanagementsystem.dto.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -9,19 +11,27 @@ import java.time.LocalDate;
 @Data
 public class EmployeeRequestDto {
 
-    @NotBlank
+    @NotBlank(message = "Full name is required")
+    @Pattern(regexp="^[A-Za-z ]+$", message = "Full name can only contain letters and spaces")
     private String fullName;
 
-    @Email
+    @NotBlank(message = "Email is required")
+    @Email(message = "Invalid email format")
     private String email;
 
-    @NotBlank
+    @NotBlank(message = "Phone is required")
+    @Pattern(
+            regexp="^[6-9]\\d{9}$",
+            message="Phone number must be 10 digits"
+    )
     private String phone;
 
-    @NotBlank
+    @NotBlank(message = "Department is required")
+    @Size(max=50, message = "Department name is too long")
     private String department;
 
-    @NotBlank
+    @NotBlank(message = "Designation is required")
+    @Size(max=50, message = "Designation is too long")
     private String designation;
 
     private LocalDate joiningDate;

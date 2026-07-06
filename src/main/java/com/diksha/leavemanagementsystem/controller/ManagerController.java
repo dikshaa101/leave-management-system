@@ -1,9 +1,13 @@
 package com.diksha.leavemanagementsystem.controller;
 
 import com.diksha.leavemanagementsystem.dto.request.ApprovalRequestDto;
+import com.diksha.leavemanagementsystem.dto.request.CreateEmployeeRequest;
 import com.diksha.leavemanagementsystem.dto.response.ApiResponse;
+import com.diksha.leavemanagementsystem.dto.response.EmployeeResponseDto;
 import com.diksha.leavemanagementsystem.dto.response.LeaveResponseDto;
 import com.diksha.leavemanagementsystem.service.ApprovalService;
+import com.diksha.leavemanagementsystem.service.EmployeeAccountService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -16,8 +20,29 @@ import java.util.List;
 public class ManagerController {
 
     private final ApprovalService approvalService;
+    private final EmployeeAccountService employeeAccountService;
 
-    // View all pending leave requests
+    /**
+     * Create Employee Account
+     */
+    @PostMapping("/employees")
+    @PreAuthorize("hasRole('MANAGER')")
+    public ApiResponse<EmployeeResponseDto> createEmployee(
+            @Valid @RequestBody CreateEmployeeRequest request) {
+
+        EmployeeResponseDto employee =
+                employeeAccountService.createEmployee(request);
+
+        return new ApiResponse<>(
+                true,
+                "Employee account created successfully.",
+                employee
+        );
+    }
+
+    /**
+     * View Pending Leave Requests
+     */
     @GetMapping("/leaves/pending")
     @PreAuthorize("hasRole('MANAGER')")
     public ApiResponse<List<LeaveResponseDto>> getPendingLeaves() {
@@ -29,7 +54,9 @@ public class ManagerController {
         );
     }
 
-    // Approve leave request
+    /**
+     * Approve Leave
+     */
     @PutMapping("/leaves/{id}/approve")
     @PreAuthorize("hasRole('MANAGER')")
     public ApiResponse<String> approveLeave(
@@ -43,7 +70,9 @@ public class ManagerController {
         );
     }
 
-    // Reject leave request
+    /**
+     * Reject Leave
+     */
     @PutMapping("/leaves/{id}/reject")
     @PreAuthorize("hasRole('MANAGER')")
     public ApiResponse<String> rejectLeave(
