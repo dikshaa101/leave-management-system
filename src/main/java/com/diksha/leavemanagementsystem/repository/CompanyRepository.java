@@ -14,4 +14,6 @@ public interface CompanyRepository
 
     boolean existsByCompanyCode(String companyCode);
 
+    boolean existsByCompanyName(String companyName);
+
 }

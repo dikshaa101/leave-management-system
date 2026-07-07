@@ -2,12 +2,15 @@ package com.diksha.leavemanagementsystem.service;
 
 import com.diksha.leavemanagementsystem.dto.request.LeaveRequestDto;
 import com.diksha.leavemanagementsystem.dto.response.LeaveResponseDto;
+import com.diksha.leavemanagementsystem.entity.Company;
 import com.diksha.leavemanagementsystem.entity.Employee;
 import com.diksha.leavemanagementsystem.entity.LeaveRequest;
 import com.diksha.leavemanagementsystem.entity.LeaveStatus;
+import com.diksha.leavemanagementsystem.entity.User;
 import com.diksha.leavemanagementsystem.exception.ResourceNotFoundException;
 import com.diksha.leavemanagementsystem.repository.EmployeeRepository;
 import com.diksha.leavemanagementsystem.repository.LeaveRepository;
+import com.diksha.leavemanagementsystem.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -23,18 +26,43 @@ public class LeaveService {
 
     private final LeaveRepository leaveRepository;
     private final EmployeeRepository employeeRepository;
+    private final UserRepository userRepository;
 
-    public LeaveResponseDto applyLeave(LeaveRequestDto dto) {
+    /**
+     * Returns logged-in user's company.
+     */
+    private Company getLoggedInCompany() {
 
         Authentication authentication =
                 SecurityContextHolder.getContext().getAuthentication();
 
         String username = authentication.getName();
 
-        Employee employee = employeeRepository
-                .findByUserUsername(username)
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("User not found"));
+
+        return user.getCompany();
+    }
+
+    /**
+     * Returns logged-in employee.
+     */
+    private Employee getLoggedInEmployee() {
+
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        String username = authentication.getName();
+
+        return employeeRepository.findByUserUsername(username)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Employee not found"));
+    }
+
+    public LeaveResponseDto applyLeave(LeaveRequestDto dto) {
+
+        Employee employee = getLoggedInEmployee();
 
         if (dto.getStartDate().isAfter(dto.getEndDate())) {
             throw new RuntimeException("Start date cannot be after end date");
@@ -46,25 +74,23 @@ public class LeaveService {
 
         long leaveDays = calculateLeaveDays(
                 dto.getStartDate(),
-                dto.getEndDate()
-        );
+                dto.getEndDate());
 
         if (leaveDays > employee.getLeaveBalance()) {
             throw new RuntimeException(
                     "Insufficient leave balance. Available: "
-                            + employee.getLeaveBalance() + " days"
-            );
+                            + employee.getLeaveBalance() + " days");
         }
 
-        boolean overlap = leaveRepository
-                .existsByEmployeeAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
+        boolean overlap =
+                leaveRepository.existsByEmployeeAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
                         employee,
                         dto.getEndDate(),
-                        dto.getStartDate()
-                );
+                        dto.getStartDate());
 
         if (overlap) {
-            throw new RuntimeException("Leave already exists for selected dates");
+            throw new RuntimeException(
+                    "Leave already exists for selected dates");
         }
 
         LeaveRequest leave = LeaveRequest.builder()
@@ -78,21 +104,12 @@ public class LeaveService {
                 .build();
 
         return mapToDto(
-                leaveRepository.save(leave)
-        );
+                leaveRepository.save(leave));
     }
 
     public List<LeaveResponseDto> getMyLeaves() {
 
-        Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
-
-        String username = authentication.getName();
-
-        Employee employee = employeeRepository
-                .findByUserUsername(username)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Employee not found"));
+        Employee employee = getLoggedInEmployee();
 
         return leaveRepository.findByEmployee(employee)
                 .stream()
@@ -100,48 +117,58 @@ public class LeaveService {
                 .toList();
     }
 
+    /**
+     * Managers can view only leave requests
+     * belonging to their company.
+     */
     public List<LeaveResponseDto> getAllLeaves() {
 
-        return leaveRepository.findAll()
+        Company company = getLoggedInCompany();
+
+        return leaveRepository
+                .findByEmployeeCompany(company)
                 .stream()
                 .map(this::mapToDto)
                 .toList();
     }
 
+    /**
+     * Fetch leave only if it belongs
+     * to logged-in user's company.
+     */
     public LeaveResponseDto getLeaveById(Long id) {
 
-        LeaveRequest leave = leaveRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Leave not found"));
+        Company company = getLoggedInCompany();
+
+        LeaveRequest leave =
+                leaveRepository
+                        .findByIdAndEmployeeCompany(id, company)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException("Leave not found"));
 
         return mapToDto(leave);
     }
 
     public String cancelLeave(Long leaveId) {
 
-        Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
-
-        String username = authentication.getName();
-
-        Employee employee = employeeRepository
-                .findByUserUsername(username)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Employee not found"));
+        Employee employee = getLoggedInEmployee();
 
         LeaveRequest leave = leaveRepository.findById(leaveId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Leave not found"));
 
         if (!leave.getEmployee().getId().equals(employee.getId())) {
-            throw new RuntimeException("You can cancel only your own leave requests.");
+            throw new RuntimeException(
+                    "You can cancel only your own leave requests.");
         }
 
         if (leave.getStatus() != LeaveStatus.PENDING) {
-            throw new RuntimeException("Only pending leave requests can be cancelled.");
+            throw new RuntimeException(
+                    "Only pending leave requests can be cancelled.");
         }
 
         leave.setStatus(LeaveStatus.CANCELLED);
+
         leaveRepository.save(leave);
 
         return "Leave cancelled successfully.";
@@ -171,4 +198,5 @@ public class LeaveService {
 
         return ChronoUnit.DAYS.between(startDate, endDate) + 1;
     }
+
 }

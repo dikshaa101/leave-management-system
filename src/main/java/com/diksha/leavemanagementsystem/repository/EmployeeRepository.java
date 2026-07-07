@@ -14,6 +14,7 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 
     boolean existsByEmail(String email);
 
+
     Optional<Employee> findByUserUsername(String username);
 
     List<Employee> findByDepartmentIgnoreCase(String department);
@@ -22,5 +23,23 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
             String department,
             Pageable pageable
     );
+
+    List<Employee> findByCompanyId(Long companyId);
+
+    Page<Employee> findByCompanyId(Long companyId,
+                                   Pageable pageable);
+
+    Page<Employee> findByCompanyIdAndDepartmentContainingIgnoreCase(
+            Long companyId,
+            String department,
+            Pageable pageable
+    );
+
+    Optional<Employee> findByIdAndCompanyId(
+            Long employeeId,
+            Long companyId
+    );
+
+
 
 }
