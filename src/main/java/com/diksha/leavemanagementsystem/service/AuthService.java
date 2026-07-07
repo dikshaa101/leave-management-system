@@ -7,7 +7,9 @@ import com.diksha.leavemanagementsystem.entity.Company;
 import com.diksha.leavemanagementsystem.entity.Employee;
 import com.diksha.leavemanagementsystem.entity.Role;
 import com.diksha.leavemanagementsystem.entity.User;
+import com.diksha.leavemanagementsystem.exception.BadRequestException;
 import com.diksha.leavemanagementsystem.repository.CompanyRepository;
+import com.diksha.leavemanagementsystem.repository.EmployeeRepository;
 import com.diksha.leavemanagementsystem.repository.UserRepository;
 import com.diksha.leavemanagementsystem.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +25,7 @@ import org.springframework.stereotype.Service;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final EmployeeRepository employeeRepository;
     private final CompanyRepository companyRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
@@ -31,19 +34,35 @@ public class AuthService {
 
     public String register(RegisterRequest request) {
 
+        // Username validation
         if (userRepository.existsByUsername(request.getUsername())) {
-            throw new RuntimeException("Username already exists.");
+            throw new BadRequestException("Username already exists.");
         }
 
+        // Email validation
+        if (employeeRepository.existsByEmail(request.getEmail())) {
+            throw new BadRequestException("Email already exists.");
+        }
+
+
+        // Company Code validation
         if (companyRepository.existsByCompanyCode(request.getCompanyCode())) {
-            throw new RuntimeException("Company code already exists.");
+            throw new BadRequestException("Company code already exists.");
         }
 
+        // Company Name validation
+        if (companyRepository.existsByCompanyName(request.getCompanyName())) {
+            throw new BadRequestException("Company name already exists.");
+        }
+
+        // Company Name should not be blank
         if (request.getCompanyName() == null ||
-                request.getCompanyName().isBlank()) {
-            throw new RuntimeException("Company name is required.");
+                request.getCompanyName().trim().isEmpty()) {
+
+            throw new BadRequestException("Company name is required.");
         }
 
+        // Create Company
         Company company = Company.builder()
                 .companyName(request.getCompanyName())
                 .companyCode(request.getCompanyCode())
@@ -51,6 +70,7 @@ public class AuthService {
 
         company = companyRepository.save(company);
 
+        // Create User
         User user = User.builder()
                 .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
@@ -58,6 +78,7 @@ public class AuthService {
                 .company(company)
                 .build();
 
+        // Create Employee
         Employee employee = Employee.builder()
                 .fullName(request.getFullName())
                 .email(request.getEmail())
@@ -92,7 +113,8 @@ public class AuthService {
         String token = jwtUtil.generateToken(userDetails);
 
         User user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new RuntimeException("User not found."));
+                .orElseThrow(() ->
+                        new BadRequestException("User not found."));
 
         return new JwtResponse(
                 token,

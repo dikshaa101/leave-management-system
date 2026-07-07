@@ -4,14 +4,12 @@ import com.diksha.leavemanagementsystem.dto.request.EmployeeRequestDto;
 import com.diksha.leavemanagementsystem.dto.response.ApiResponse;
 import com.diksha.leavemanagementsystem.dto.response.EmployeeResponseDto;
 import com.diksha.leavemanagementsystem.service.EmployeeService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
 
 import java.util.List;
 
@@ -24,16 +22,13 @@ public class EmployeeController {
 
     @PostMapping
     @PreAuthorize("hasRole('MANAGER')")
-    public ApiResponse<EmployeeResponseDto> addEmployee(
-            @Valid @RequestBody EmployeeRequestDto dto) {
-
-        EmployeeResponseDto employee =
-                employeeService.addEmployee(dto);
+    public ApiResponse<EmployeeResponseDto> createEmployee(
+            @RequestBody EmployeeRequestDto dto) {
 
         return new ApiResponse<>(
                 true,
-                "Employee added successfully",
-                employee
+                "Employee created successfully",
+                employeeService.createEmployee(dto)
         );
     }
 
@@ -42,15 +37,10 @@ public class EmployeeController {
     public ApiResponse<List<EmployeeResponseDto>> getAllEmployees() {
 
         return new ApiResponse<>(
-
                 true,
-
                 "Employee list fetched successfully",
-
                 employeeService.getAllEmployees()
-
         );
-
     }
 
     @GetMapping("/{id}")
@@ -59,50 +49,35 @@ public class EmployeeController {
             @PathVariable Long id) {
 
         return new ApiResponse<>(
-
                 true,
-
                 "Employee fetched successfully",
-
                 employeeService.getEmployeeById(id)
-
         );
-
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('MANAGER')")
     public ApiResponse<EmployeeResponseDto> updateEmployee(
             @PathVariable Long id,
-            @RequestBody EmployeeRequestDto dto){
+            @RequestBody EmployeeRequestDto dto) {
 
         return new ApiResponse<>(
-
                 true,
-
                 "Employee updated successfully",
-
-                employeeService.updateEmployee(id,dto)
-
+                employeeService.updateEmployee(id, dto)
         );
-
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('MANAGER')")
     public ApiResponse<String> deleteEmployee(
-            @PathVariable Long id){
+            @PathVariable Long id) {
 
         return new ApiResponse<>(
-
                 true,
-
                 employeeService.deleteEmployee(id),
-
                 null
-
         );
-
     }
 
     @GetMapping("/search")
@@ -113,22 +88,17 @@ public class EmployeeController {
 
             @RequestParam(defaultValue = "0") int page,
 
-            @RequestParam(defaultValue = "5") int size){
+            @RequestParam(defaultValue = "5") int size) {
 
-        Pageable pageable = PageRequest.of(page,size);
+        Pageable pageable = PageRequest.of(page, size);
 
         return new ApiResponse<>(
-
                 true,
-
                 "Department employees fetched",
-
                 employeeService.searchByDepartment(
                         department,
                         pageable)
-
         );
-
     }
 
     @GetMapping("/page")
@@ -139,41 +109,27 @@ public class EmployeeController {
 
             @RequestParam(defaultValue = "5") int size,
 
-            @RequestParam(defaultValue = "fullName") String sortBy){
+            @RequestParam(defaultValue = "fullName") String sortBy) {
 
         return new ApiResponse<>(
-
                 true,
-
                 "Employees fetched",
-
                 employeeService.getEmployees(
                         page,
                         size,
                         sortBy)
-
         );
-
     }
 
     @GetMapping("/profile")
-    @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER')")
-    public ApiResponse<EmployeeResponseDto> myProfile(){
+    @PreAuthorize("hasAnyRole(" +
+            "'EMPLOYEE','MANAGER')")
+    public ApiResponse<EmployeeResponseDto> myProfile() {
 
         return new ApiResponse<>(
-
                 true,
-
                 "Profile fetched",
-
                 employeeService.getMyProfile()
-
         );
-
     }
-
-
-
-
-
 }
