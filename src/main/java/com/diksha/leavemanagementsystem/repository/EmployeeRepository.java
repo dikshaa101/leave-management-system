@@ -40,6 +40,9 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
             Long companyId
     );
 
-
+    List<Employee> findByCompanyIdAndDepartmentIgnoreCase(
+            Long companyId,
+            String department
+    );
 
 }

@@ -2,9 +2,12 @@ package com.diksha.leavemanagementsystem.unit.service;
 
 import com.diksha.leavemanagementsystem.dto.request.EmployeeRequestDto;
 import com.diksha.leavemanagementsystem.dto.response.EmployeeResponseDto;
+import com.diksha.leavemanagementsystem.entity.Company;
 import com.diksha.leavemanagementsystem.entity.Employee;
+import com.diksha.leavemanagementsystem.entity.User;
 import com.diksha.leavemanagementsystem.exception.ResourceNotFoundException;
 import com.diksha.leavemanagementsystem.repository.EmployeeRepository;
+import com.diksha.leavemanagementsystem.repository.UserRepository;
 import com.diksha.leavemanagementsystem.service.EmployeeService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,13 +16,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -37,15 +39,35 @@ class EmployeeServiceUnitTest {
     @Mock
     private EmployeeRepository employeeRepository;
 
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
     @InjectMocks
     private EmployeeService employeeService;
 
     private Employee employee;
     private EmployeeRequestDto requestDto;
     private SecurityContext securityContext;
+    private Company company;
+    private User user;
 
     @BeforeEach
     void setUp() {
+        company = Company.builder()
+                .id(1L)
+                .companyName("Test Company")
+                .companyCode("COMP101")
+                .build();
+
+        user = User.builder()
+                .id(1L)
+                .username("testuser")
+                .company(company)
+                .build();
+
         employee = Employee.builder()
                 .id(1L)
                 .fullName("Test Employee")
@@ -55,6 +77,7 @@ class EmployeeServiceUnitTest {
                 .designation("Developer")
                 .joiningDate(LocalDate.now())
                 .leaveBalance(20)
+                .company(company)
                 .build();
 
         requestDto = new EmployeeRequestDto();
@@ -64,6 +87,8 @@ class EmployeeServiceUnitTest {
         requestDto.setDepartment("IT");
         requestDto.setDesignation("Developer");
         requestDto.setJoiningDate(LocalDate.now());
+        requestDto.setUsername("testuser");
+        requestDto.setPassword("password123");
     }
 
     private void setSecurityContextForUsername(String username) {
@@ -106,7 +131,9 @@ class EmployeeServiceUnitTest {
 
     @Test
     void testGetAllEmployees() {
-        when(employeeRepository.findAll()).thenReturn(List.of(employee));
+        setSecurityContextForUsername("testuser");
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
+        when(employeeRepository.findByCompanyId(1L)).thenReturn(List.of(employee));
 
         List<EmployeeResponseDto> results = employeeService.getAllEmployees();
 
@@ -116,7 +143,9 @@ class EmployeeServiceUnitTest {
 
     @Test
     void testGetEmployeeByIdSuccess() {
-        when(employeeRepository.findById(1L)).thenReturn(Optional.of(employee));
+        setSecurityContextForUsername("testuser");
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
+        when(employeeRepository.findByIdAndCompanyId(1L, 1L)).thenReturn(Optional.of(employee));
 
         EmployeeResponseDto response = employeeService.getEmployeeById(1L);
 
@@ -125,14 +154,18 @@ class EmployeeServiceUnitTest {
 
     @Test
     void testGetEmployeeByIdNotFound() {
-        when(employeeRepository.findById(1L)).thenReturn(Optional.empty());
+        setSecurityContextForUsername("testuser");
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
+        when(employeeRepository.findByIdAndCompanyId(1L, 1L)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> employeeService.getEmployeeById(1L));
     }
 
     @Test
     void testUpdateEmployeeSuccess() {
-        when(employeeRepository.findById(1L)).thenReturn(Optional.of(employee));
+        setSecurityContextForUsername("testuser");
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
+        when(employeeRepository.findByIdAndCompanyId(1L, 1L)).thenReturn(Optional.of(employee));
         when(employeeRepository.save(any(Employee.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         requestDto.setFullName("Updated Employee");
@@ -144,14 +177,18 @@ class EmployeeServiceUnitTest {
 
     @Test
     void testUpdateEmployeeNotFound() {
-        when(employeeRepository.findById(1L)).thenReturn(Optional.empty());
+        setSecurityContextForUsername("testuser");
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
+        when(employeeRepository.findByIdAndCompanyId(1L, 1L)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> employeeService.updateEmployee(1L, requestDto));
     }
 
     @Test
     void testDeleteEmployeeSuccess() {
-        when(employeeRepository.findById(1L)).thenReturn(Optional.of(employee));
+        setSecurityContextForUsername("testuser");
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
+        when(employeeRepository.findByIdAndCompanyId(1L, 1L)).thenReturn(Optional.of(employee));
 
         String response = employeeService.deleteEmployee(1L);
 
@@ -161,15 +198,19 @@ class EmployeeServiceUnitTest {
 
     @Test
     void testDeleteEmployeeNotFound() {
-        when(employeeRepository.findById(1L)).thenReturn(Optional.empty());
+        setSecurityContextForUsername("testuser");
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
+        when(employeeRepository.findByIdAndCompanyId(1L, 1L)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> employeeService.deleteEmployee(1L));
     }
 
     @Test
     void testSearchByDepartment() {
+        setSecurityContextForUsername("testuser");
         Pageable pageable = PageRequest.of(0, 5);
-        when(employeeRepository.findByDepartmentContainingIgnoreCase(anyString(), any(Pageable.class)))
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
+        when(employeeRepository.findByCompanyIdAndDepartmentContainingIgnoreCase(1L, "IT", pageable))
                 .thenReturn(new PageImpl<>(List.of(employee)));
 
         var page = employeeService.searchByDepartment("IT", pageable);
@@ -180,7 +221,10 @@ class EmployeeServiceUnitTest {
 
     @Test
     void testGetEmployees() {
-        when(employeeRepository.findAll(any(Pageable.class)))
+        setSecurityContextForUsername("testuser");
+        Pageable pageable = PageRequest.of(0, 5, Sort.by("fullName"));
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
+        when(employeeRepository.findByCompanyId(1L, pageable))
                 .thenReturn(new PageImpl<>(List.of(employee)));
 
         var page = employeeService.getEmployees(0, 5, "fullName");

@@ -2,13 +2,11 @@ package com.diksha.leavemanagementsystem.unit.service;
 
 import com.diksha.leavemanagementsystem.dto.request.LeaveRequestDto;
 import com.diksha.leavemanagementsystem.dto.response.LeaveResponseDto;
-import com.diksha.leavemanagementsystem.entity.Employee;
-import com.diksha.leavemanagementsystem.entity.LeaveRequest;
-import com.diksha.leavemanagementsystem.entity.LeaveStatus;
-import com.diksha.leavemanagementsystem.entity.LeaveType;
+import com.diksha.leavemanagementsystem.entity.*;
 import com.diksha.leavemanagementsystem.exception.ResourceNotFoundException;
 import com.diksha.leavemanagementsystem.repository.EmployeeRepository;
 import com.diksha.leavemanagementsystem.repository.LeaveRepository;
+import com.diksha.leavemanagementsystem.repository.UserRepository;
 import com.diksha.leavemanagementsystem.service.LeaveService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,6 +36,9 @@ class LeaveServiceUnitTest {
     @Mock
     private EmployeeRepository employeeRepository;
 
+    @Mock
+    private UserRepository userRepository;
+
     @InjectMocks
     private LeaveService leaveService;
 
@@ -45,9 +46,23 @@ class LeaveServiceUnitTest {
     private LeaveRequest leaveRequest;
     private LeaveRequestDto leaveRequestDto;
     private Authentication authentication;
+    private Company company;
+    private User user;
 
     @BeforeEach
     void setUp() {
+        company = Company.builder()
+                .id(1L)
+                .companyCode("COMP101")
+                .companyName("Test Company")
+                .build();
+
+        user = User.builder()
+                .id(1L)
+                .username("testuser")
+                .company(company)
+                .build();
+
         employee = Employee.builder()
                 .id(1L)
                 .fullName("Test Employee")
@@ -56,6 +71,7 @@ class LeaveServiceUnitTest {
                 .department("IT")
                 .designation("Developer")
                 .leaveBalance(20)
+                .company(company)
                 .build();
 
         leaveRequestDto = new LeaveRequestDto();
@@ -175,29 +191,32 @@ class LeaveServiceUnitTest {
     @Test
     void testGetAllLeaves() {
         List<LeaveRequest> leaves = List.of(leaveRequest);
-        when(leaveRepository.findAll()).thenReturn(leaves);
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
+        when(leaveRepository.findByEmployeeCompany(company)).thenReturn(leaves);
 
         List<LeaveResponseDto> result = leaveService.getAllLeaves();
 
         assertNotNull(result);
         assertEquals(1, result.size());
-        verify(leaveRepository, times(1)).findAll();
+        verify(leaveRepository, times(1)).findByEmployeeCompany(company);
     }
 
     @Test
     void testGetLeaveById() {
-        when(leaveRepository.findById(1L)).thenReturn(Optional.of(leaveRequest));
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
+        when(leaveRepository.findByIdAndEmployeeCompany(1L, company)).thenReturn(Optional.of(leaveRequest));
 
         LeaveResponseDto result = leaveService.getLeaveById(1L);
 
         assertNotNull(result);
         assertEquals("Test Employee", result.getEmployeeName());
-        verify(leaveRepository, times(1)).findById(1L);
+        verify(leaveRepository, times(1)).findByIdAndEmployeeCompany(1L, company);
     }
 
     @Test
     void testGetLeaveByIdNotFound() {
-        when(leaveRepository.findById(999L)).thenReturn(Optional.empty());
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
+        when(leaveRepository.findByIdAndEmployeeCompany(999L, company)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> leaveService.getLeaveById(999L));
     }

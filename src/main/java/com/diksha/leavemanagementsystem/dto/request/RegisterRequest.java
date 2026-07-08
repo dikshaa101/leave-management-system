@@ -36,4 +36,6 @@ public class RegisterRequest {
     private String designation;
 
     private LocalDate joiningDate;
+
+    private Role role;
 }

@@ -10,6 +10,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 
+import com.diksha.leavemanagementsystem.dto.response.TeamAvailabilityResponseDto;
+import java.util.List;
+
 @RestController
 @RequestMapping("/team")
 @RequiredArgsConstructor
@@ -61,6 +64,27 @@ public class TeamController {
                         department,
                         date
                 )
+        );
+    }
+
+    @GetMapping("/availability")
+    @PreAuthorize("hasRole('MANAGER')")
+    public ApiResponse<List<TeamAvailabilityResponseDto>> getTeamAvailability(
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate startDate,
+
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate endDate,
+
+            @RequestParam(required = false)
+            String department) {
+
+        return new ApiResponse<>(
+                true,
+                "Team availability details fetched successfully.",
+                teamAvailabilityService.getTeamAvailability(startDate, endDate, department)
         );
     }
 
