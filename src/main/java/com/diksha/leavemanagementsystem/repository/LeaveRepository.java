@@ -65,5 +65,10 @@ public interface LeaveRepository extends JpaRepository<LeaveRequest, Long> {
 
     Optional<LeaveRequest> findByIdAndEmployeeCompany(Long id, Company company);
 
+    List<LeaveRequest> findByEmployeeCompanyIdAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
+            Long companyId,
+            LocalDate endDate,
+            LocalDate startDate
+    );
 
 }

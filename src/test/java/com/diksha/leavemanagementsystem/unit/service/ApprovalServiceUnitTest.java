@@ -2,21 +2,23 @@ package com.diksha.leavemanagementsystem.unit.service;
 
 import com.diksha.leavemanagementsystem.dto.request.ApprovalRequestDto;
 import com.diksha.leavemanagementsystem.dto.response.LeaveResponseDto;
-import com.diksha.leavemanagementsystem.entity.Employee;
-import com.diksha.leavemanagementsystem.entity.LeaveRequest;
-import com.diksha.leavemanagementsystem.entity.LeaveStatus;
-import com.diksha.leavemanagementsystem.entity.LeaveType;
+import com.diksha.leavemanagementsystem.entity.*;
 import com.diksha.leavemanagementsystem.exception.ResourceNotFoundException;
 import com.diksha.leavemanagementsystem.repository.EmployeeRepository;
 import com.diksha.leavemanagementsystem.repository.LeaveRepository;
 import com.diksha.leavemanagementsystem.service.ApprovalService;
 import com.diksha.leavemanagementsystem.service.LeaveService;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -41,16 +43,31 @@ class ApprovalServiceUnitTest {
     @InjectMocks
     private ApprovalService approvalService;
 
+    private Company company;
+    private Employee manager;
     private Employee employee;
     private LeaveRequest leaveRequest;
     private ApprovalRequestDto approvalRequestDto;
 
     @BeforeEach
     void setUp() {
+        company = Company.builder()
+                .id(1L)
+                .companyCode("COMP101")
+                .companyName("Test Company")
+                .build();
+
+        manager = Employee.builder()
+                .id(2L)
+                .fullName("Manager User")
+                .company(company)
+                .build();
+
         employee = Employee.builder()
                 .id(1L)
                 .fullName("Test Employee")
                 .leaveBalance(10)
+                .company(company)
                 .build();
 
         leaveRequest = LeaveRequest.builder()
@@ -64,11 +81,22 @@ class ApprovalServiceUnitTest {
 
         approvalRequestDto = new ApprovalRequestDto();
         approvalRequestDto.setRemarks("Approved");
+
+        Authentication authentication = new UsernamePasswordAuthenticationToken("manageruser", null);
+        SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
+        securityContext.setAuthentication(authentication);
+        SecurityContextHolder.setContext(securityContext);
+    }
+
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
     }
 
     @Test
     void testGetPendingLeaves() {
-        when(leaveRepository.findByStatus(LeaveStatus.PENDING)).thenReturn(List.of(leaveRequest));
+        when(employeeRepository.findByUserUsername("manageruser")).thenReturn(Optional.of(manager));
+        when(leaveRepository.findByStatusAndEmployeeCompany(LeaveStatus.PENDING, company)).thenReturn(List.of(leaveRequest));
         when(leaveService.mapToDto(leaveRequest)).thenReturn(LeaveResponseDto.builder()
                 .id(1L)
                 .status(LeaveStatus.PENDING)
@@ -79,12 +107,13 @@ class ApprovalServiceUnitTest {
 
         assertEquals(1, result.size());
         assertEquals(LeaveStatus.PENDING, result.get(0).getStatus());
-        verify(leaveRepository, times(1)).findByStatus(LeaveStatus.PENDING);
+        verify(leaveRepository, times(1)).findByStatusAndEmployeeCompany(LeaveStatus.PENDING, company);
     }
 
     @Test
     void testApproveLeaveSuccess() {
-        when(leaveRepository.findById(1L)).thenReturn(Optional.of(leaveRequest));
+        when(employeeRepository.findByUserUsername("manageruser")).thenReturn(Optional.of(manager));
+        when(leaveRepository.findByIdAndEmployeeCompany(1L, company)).thenReturn(Optional.of(leaveRequest));
         when(employeeRepository.save(any(Employee.class))).thenReturn(employee);
         when(leaveRepository.save(any(LeaveRequest.class))).thenReturn(leaveRequest);
 
@@ -99,7 +128,8 @@ class ApprovalServiceUnitTest {
 
     @Test
     void testApproveLeaveNotFound() {
-        when(leaveRepository.findById(1L)).thenReturn(Optional.empty());
+        when(employeeRepository.findByUserUsername("manageruser")).thenReturn(Optional.of(manager));
+        when(leaveRepository.findByIdAndEmployeeCompany(1L, company)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> approvalService.approveLeave(1L, approvalRequestDto));
     }
@@ -107,7 +137,8 @@ class ApprovalServiceUnitTest {
     @Test
     void testApproveLeaveNotPending() {
         leaveRequest.setStatus(LeaveStatus.APPROVED);
-        when(leaveRepository.findById(1L)).thenReturn(Optional.of(leaveRequest));
+        when(employeeRepository.findByUserUsername("manageruser")).thenReturn(Optional.of(manager));
+        when(leaveRepository.findByIdAndEmployeeCompany(1L, company)).thenReturn(Optional.of(leaveRequest));
 
         assertThrows(RuntimeException.class, () -> approvalService.approveLeave(1L, approvalRequestDto));
     }
@@ -115,14 +146,16 @@ class ApprovalServiceUnitTest {
     @Test
     void testApproveLeaveInsufficientBalance() {
         employee.setLeaveBalance(1);
-        when(leaveRepository.findById(1L)).thenReturn(Optional.of(leaveRequest));
+        when(employeeRepository.findByUserUsername("manageruser")).thenReturn(Optional.of(manager));
+        when(leaveRepository.findByIdAndEmployeeCompany(1L, company)).thenReturn(Optional.of(leaveRequest));
 
         assertThrows(RuntimeException.class, () -> approvalService.approveLeave(1L, approvalRequestDto));
     }
 
     @Test
     void testRejectLeaveSuccess() {
-        when(leaveRepository.findById(1L)).thenReturn(Optional.of(leaveRequest));
+        when(employeeRepository.findByUserUsername("manageruser")).thenReturn(Optional.of(manager));
+        when(leaveRepository.findByIdAndEmployeeCompany(1L, company)).thenReturn(Optional.of(leaveRequest));
         when(leaveRepository.save(any(LeaveRequest.class))).thenReturn(leaveRequest);
 
         String result = approvalService.rejectLeave(1L, approvalRequestDto);
@@ -135,7 +168,8 @@ class ApprovalServiceUnitTest {
 
     @Test
     void testRejectLeaveNotFound() {
-        when(leaveRepository.findById(1L)).thenReturn(Optional.empty());
+        when(employeeRepository.findByUserUsername("manageruser")).thenReturn(Optional.of(manager));
+        when(leaveRepository.findByIdAndEmployeeCompany(1L, company)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> approvalService.rejectLeave(1L, approvalRequestDto));
     }
@@ -143,7 +177,8 @@ class ApprovalServiceUnitTest {
     @Test
     void testRejectLeaveNotPending() {
         leaveRequest.setStatus(LeaveStatus.APPROVED);
-        when(leaveRepository.findById(1L)).thenReturn(Optional.of(leaveRequest));
+        when(employeeRepository.findByUserUsername("manageruser")).thenReturn(Optional.of(manager));
+        when(leaveRepository.findByIdAndEmployeeCompany(1L, company)).thenReturn(Optional.of(leaveRequest));
 
         assertThrows(RuntimeException.class, () -> approvalService.rejectLeave(1L, approvalRequestDto));
     }

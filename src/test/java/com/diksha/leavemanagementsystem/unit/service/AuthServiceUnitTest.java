@@ -3,8 +3,11 @@ package com.diksha.leavemanagementsystem.unit.service;
 import com.diksha.leavemanagementsystem.dto.request.LoginRequest;
 import com.diksha.leavemanagementsystem.dto.request.RegisterRequest;
 import com.diksha.leavemanagementsystem.dto.response.JwtResponse;
+import com.diksha.leavemanagementsystem.entity.Company;
 import com.diksha.leavemanagementsystem.entity.Role;
 import com.diksha.leavemanagementsystem.entity.User;
+import com.diksha.leavemanagementsystem.repository.CompanyRepository;
+import com.diksha.leavemanagementsystem.repository.EmployeeRepository;
 import com.diksha.leavemanagementsystem.repository.UserRepository;
 import com.diksha.leavemanagementsystem.security.JwtUtil;
 import com.diksha.leavemanagementsystem.service.AuthService;
@@ -31,6 +34,12 @@ class AuthServiceUnitTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private EmployeeRepository employeeRepository;
+
+    @Mock
+    private CompanyRepository companyRepository;
 
     @Mock
     private PasswordEncoder passwordEncoder;
@@ -62,6 +71,7 @@ class AuthServiceUnitTest {
         registerRequest.setDepartment("IT");
         registerRequest.setDesignation("Developer");
         registerRequest.setRole(Role.EMPLOYEE);
+        registerRequest.setCompanyCode("COMP101");
 
         loginRequest = new LoginRequest();
         loginRequest.setUsername("testuser");
@@ -77,7 +87,15 @@ class AuthServiceUnitTest {
 
     @Test
     void testRegisterSuccess() {
+        Company company = Company.builder()
+                .id(1L)
+                .companyCode("COMP101")
+                .companyName("Test Company")
+                .build();
+
         when(userRepository.existsByUsername("testuser")).thenReturn(false);
+        when(employeeRepository.existsByEmail("test@example.com")).thenReturn(false);
+        when(companyRepository.findByCompanyCode("COMP101")).thenReturn(Optional.of(company));
         when(passwordEncoder.encode("password123")).thenReturn("encoded_password");
         when(userRepository.save(any(User.class))).thenReturn(user);
 
@@ -85,6 +103,8 @@ class AuthServiceUnitTest {
 
         assertEquals("User Registered Successfully", result);
         verify(userRepository, times(1)).existsByUsername("testuser");
+        verify(employeeRepository, times(1)).existsByEmail("test@example.com");
+        verify(companyRepository, times(1)).findByCompanyCode("COMP101");
         verify(passwordEncoder, times(1)).encode("password123");
         verify(userRepository, times(1)).save(any(User.class));
     }
@@ -150,8 +170,20 @@ class AuthServiceUnitTest {
         managerRequest.setDepartment("Management");
         managerRequest.setDesignation("Manager");
         managerRequest.setRole(Role.MANAGER);
+        managerRequest.setCompanyCode("MGR_COMP");
+        managerRequest.setCompanyName("Manager Company");
+
+        Company company = Company.builder()
+                .id(2L)
+                .companyCode("MGR_COMP")
+                .companyName("Manager Company")
+                .build();
 
         when(userRepository.existsByUsername("manager")).thenReturn(false);
+        when(employeeRepository.existsByEmail("manager@example.com")).thenReturn(false);
+        when(companyRepository.existsByCompanyCode("MGR_COMP")).thenReturn(false);
+        when(companyRepository.existsByCompanyName("Manager Company")).thenReturn(false);
+        when(companyRepository.save(any(Company.class))).thenReturn(company);
         when(passwordEncoder.encode("password123")).thenReturn("encoded_password");
         when(userRepository.save(any(User.class))).thenReturn(user);
 

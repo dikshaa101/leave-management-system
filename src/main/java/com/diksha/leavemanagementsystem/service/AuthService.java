@@ -8,6 +8,7 @@ import com.diksha.leavemanagementsystem.entity.Employee;
 import com.diksha.leavemanagementsystem.entity.Role;
 import com.diksha.leavemanagementsystem.entity.User;
 import com.diksha.leavemanagementsystem.exception.BadRequestException;
+import com.diksha.leavemanagementsystem.exception.ResourceNotFoundException;
 import com.diksha.leavemanagementsystem.repository.CompanyRepository;
 import com.diksha.leavemanagementsystem.repository.EmployeeRepository;
 import com.diksha.leavemanagementsystem.repository.UserRepository;
@@ -44,37 +45,44 @@ public class AuthService {
             throw new BadRequestException("Email already exists.");
         }
 
+        Role userRole = request.getRole() != null ? request.getRole() : Role.MANAGER;
+        Company company;
 
-        // Company Code validation
-        if (companyRepository.existsByCompanyCode(request.getCompanyCode())) {
-            throw new BadRequestException("Company code already exists.");
+        if (userRole == Role.EMPLOYEE) {
+            // Join existing company
+            company = companyRepository.findByCompanyCode(request.getCompanyCode())
+                    .orElseThrow(() -> new ResourceNotFoundException("Company not found"));
+        } else {
+            // Manager registration: Create Company
+            // Company Code validation
+            if (companyRepository.existsByCompanyCode(request.getCompanyCode())) {
+                throw new BadRequestException("Company code already exists.");
+            }
+
+            // Company Name validation
+            if (companyRepository.existsByCompanyName(request.getCompanyName())) {
+                throw new BadRequestException("Company name already exists.");
+            }
+
+            // Company Name should not be blank
+            if (request.getCompanyName() == null ||
+                    request.getCompanyName().trim().isEmpty()) {
+                throw new BadRequestException("Company name is required.");
+            }
+
+            company = Company.builder()
+                    .companyName(request.getCompanyName())
+                    .companyCode(request.getCompanyCode())
+                    .build();
+
+            company = companyRepository.save(company);
         }
-
-        // Company Name validation
-        if (companyRepository.existsByCompanyName(request.getCompanyName())) {
-            throw new BadRequestException("Company name already exists.");
-        }
-
-        // Company Name should not be blank
-        if (request.getCompanyName() == null ||
-                request.getCompanyName().trim().isEmpty()) {
-
-            throw new BadRequestException("Company name is required.");
-        }
-
-        // Create Company
-        Company company = Company.builder()
-                .companyName(request.getCompanyName())
-                .companyCode(request.getCompanyCode())
-                .build();
-
-        company = companyRepository.save(company);
 
         // Create User
         User user = User.builder()
                 .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role(Role.MANAGER)
+                .role(userRole)
                 .company(company)
                 .build();
 
@@ -95,7 +103,7 @@ public class AuthService {
 
         userRepository.save(user);
 
-        return "Manager registered successfully.";
+        return "User Registered Successfully";
     }
 
     public JwtResponse login(LoginRequest request) {

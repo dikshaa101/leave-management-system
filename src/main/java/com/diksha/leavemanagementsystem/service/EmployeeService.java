@@ -60,6 +60,27 @@ public class EmployeeService {
     }
 
     /**
+     * Add Employee (used by tests / legacy)
+     */
+    public EmployeeResponseDto addEmployee(EmployeeRequestDto dto) {
+        if (employeeRepository.existsByEmail(dto.getEmail())) {
+            throw new BadRequestException("Email already exists.");
+        }
+
+        Employee employee = Employee.builder()
+                .fullName(dto.getFullName())
+                .email(dto.getEmail())
+                .phone(dto.getPhone())
+                .department(dto.getDepartment())
+                .designation(dto.getDesignation())
+                .joiningDate(dto.getJoiningDate())
+                .leaveBalance(20)
+                .build();
+
+        return mapToDto(employeeRepository.save(employee));
+    }
+
+    /**
      * Create Employee
      */
     public EmployeeResponseDto createEmployee(EmployeeRequestDto dto) {
