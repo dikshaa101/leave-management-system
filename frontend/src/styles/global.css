@@ -548,6 +548,8 @@ a:hover {
   padding: 0.75rem;
 }
 
+
+
 /* Tables */
 .table-wrap {
   overflow-x: auto;
@@ -1084,4 +1086,81 @@ tbody tr:hover {
   .bar-row {
     grid-template-columns: minmax(70px, 100px) 1fr 28px;
   }
+}
+
+
+/* ================= GOOGLE BUTTON ================= */
+
+.google-btn {
+  width: 100%;
+  padding: 0.6rem 1.25rem;
+  min-height: 44px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+
+  cursor: pointer;
+
+  font-family: var(--font);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+
+  transition: all 0.15s ease;
+
+  box-shadow: var(--shadow);
+}
+
+.google-btn:hover {
+  background: var(--bg);
+  border-color: #cbd5e1;
+}
+
+.google-btn:active {
+  background: #edf2f7;
+}
+
+.google-btn .google-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.google-btn span {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+/* ================= AUTH DIVIDER ================= */
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 1.25rem 0;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid var(--border);
+}
+
+.auth-divider::before {
+  margin-right: 1rem;
+}
+
+.auth-divider::after {
+  margin-left: 1rem;
 }

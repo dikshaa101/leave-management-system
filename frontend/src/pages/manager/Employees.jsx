@@ -18,6 +18,8 @@ const managerLinks = [
 ];
 
 const emptyForm = {
+  username: '',
+  password: '',
   fullName: '',
   email: '',
   phone: '',
@@ -56,6 +58,8 @@ export default function Employees() {
 
   const openEdit = (emp) => {
     setForm({
+      username: '',
+      password: '',
       fullName: emp.fullName || '',
       email: emp.email || '',
       phone: emp.phone || '',
@@ -123,13 +127,25 @@ export default function Employees() {
         <div className="card form-card">
           <h2>{editingId ? 'Edit Employee' : 'Add Employee'}</h2>
           <form onSubmit={handleSubmit} className="form-grid">
+            {!editingId && (
+              <>
+                <div className="form-group">
+                  <label htmlFor="username">Username *</label>
+                  <input id="username" name="username" value={form.username} onChange={handleChange} required />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="password">Password *</label>
+                  <input id="password" name="password" type="password" value={form.password} onChange={handleChange} required />
+                </div>
+              </>
+            )}
             <div className="form-group">
               <label htmlFor="fullName">Full Name *</label>
               <input id="fullName" name="fullName" value={form.fullName} onChange={handleChange} required />
             </div>
             <div className="form-group">
-              <label htmlFor="email">Email</label>
-              <input id="email" name="email" type="email" value={form.email} onChange={handleChange} />
+              <label htmlFor="email">Email *</label>
+              <input id="email" name="email" type="email" value={form.email} onChange={handleChange} required />
             </div>
             <div className="form-group">
               <label htmlFor="phone">Phone *</label>
@@ -144,8 +160,8 @@ export default function Employees() {
               <input id="designation" name="designation" value={form.designation} onChange={handleChange} required />
             </div>
             <div className="form-group">
-              <label htmlFor="joiningDate">Joining Date</label>
-              <input id="joiningDate" name="joiningDate" type="date" value={form.joiningDate} onChange={handleChange} />
+              <label htmlFor="joiningDate">Joining Date *</label>
+              <input id="joiningDate" name="joiningDate" type="date" value={form.joiningDate} onChange={handleChange} required />
             </div>
             <div className="form-actions full-width">
               <button type="button" className="btn btn-ghost" onClick={() => setShowForm(false)}>

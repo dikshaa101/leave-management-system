@@ -1,10 +1,14 @@
 package com.diksha.leavemanagementsystem.config;
 
 import com.diksha.leavemanagementsystem.security.CustomUserDetailsService;
+import com.diksha.leavemanagementsystem.security.GoogleOAuth2UserService;
+import com.diksha.leavemanagementsystem.security.OAuth2LoginSuccessHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -16,8 +20,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.http.HttpStatus;
 
 @Configuration
 @EnableWebSecurity
@@ -28,6 +30,10 @@ public class SecurityConfig {
     private final JwtFilter jwtFilter;
 
     private final CustomUserDetailsService customUserDetailsService;
+
+    private final GoogleOAuth2UserService googleOAuth2UserService;
+
+    private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http)
@@ -46,6 +52,8 @@ public class SecurityConfig {
 
                         .requestMatchers(
                                 "/auth/**",
+                                "/oauth2/**",
+                                "/login/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**"
@@ -58,7 +66,7 @@ public class SecurityConfig {
                         .hasRole("MANAGER")
 
                         .requestMatchers("/employee/**")
-                        .hasAnyRole("EMPLOYEE","MANAGER")
+                        .hasAnyRole("MANAGER", "EMPLOYEE")
 
                         .requestMatchers("/leave/**")
                         .authenticated()
@@ -67,22 +75,33 @@ public class SecurityConfig {
                         .authenticated()
 
                 )
-                .exceptionHandling(exception -> exception
-                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
+
+                .exceptionHandling(exception ->
+                        exception.authenticationEntryPoint(
+                                new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)
+                        )
+                )
 
                 .authenticationProvider(authenticationProvider())
 
                 .userDetailsService(customUserDetailsService)
 
-                .addFilterBefore(jwtFilter,
-                        UsernamePasswordAuthenticationFilter.class);
+                .oauth2Login(oauth -> oauth
+                        .userInfoEndpoint(userInfo ->
+                                userInfo.userService(googleOAuth2UserService))
+                        .successHandler(oAuth2LoginSuccessHandler)
+                )
+
+                .addFilterBefore(
+                        jwtFilter,
+                        UsernamePasswordAuthenticationFilter.class
+                );
 
         return http.build();
-
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder(){
+    public PasswordEncoder passwordEncoder() {
 
         return new BCryptPasswordEncoder();
 
@@ -107,5 +126,4 @@ public class SecurityConfig {
         return configuration.getAuthenticationManager();
 
     }
-
 }

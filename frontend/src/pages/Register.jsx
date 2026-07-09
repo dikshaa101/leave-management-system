@@ -7,6 +7,8 @@ const initialForm = {
   username: '',
   password: '',
   role: 'EMPLOYEE',
+  companyCode: '',
+  companyName: '',
   fullName: '',
   email: '',
   phone: '',
@@ -113,55 +115,87 @@ export default function Register() {
 
             <div className="form-row">
               <div className="form-group">
-                <label htmlFor="email">Email</label>
+                <label htmlFor="companyCode">Company Code *</label>
+                <input
+                  id="companyCode"
+                  name="companyCode"
+                  value={form.companyCode}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              {form.role === 'MANAGER' ? (
+                <div className="form-group">
+                  <label htmlFor="companyName">Company Name *</label>
+                  <input
+                    id="companyName"
+                    name="companyName"
+                    value={form.companyName}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+              ) : (
+                <div className="form-group" />
+              )}
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="email">Email *</label>
                 <input
                   id="email"
                   name="email"
                   type="email"
                   value={form.email}
                   onChange={handleChange}
+                  required
                 />
               </div>
               <div className="form-group">
-                <label htmlFor="phone">Phone</label>
+                <label htmlFor="phone">Phone *</label>
                 <input
                   id="phone"
                   name="phone"
                   value={form.phone}
                   onChange={handleChange}
+                  required
                 />
               </div>
             </div>
 
             <div className="form-row">
               <div className="form-group">
-                <label htmlFor="department">Department</label>
+                <label htmlFor="department">Department *</label>
                 <input
                   id="department"
                   name="department"
                   value={form.department}
                   onChange={handleChange}
+                  required
                 />
               </div>
               <div className="form-group">
-                <label htmlFor="designation">Designation</label>
+                <label htmlFor="designation">Designation *</label>
                 <input
                   id="designation"
                   name="designation"
                   value={form.designation}
                   onChange={handleChange}
+                  required
                 />
               </div>
             </div>
 
             <div className="form-group">
-              <label htmlFor="joiningDate">Joining Date</label>
+              <label htmlFor="joiningDate">Joining Date *</label>
               <input
                 id="joiningDate"
                 name="joiningDate"
                 type="date"
                 value={form.joiningDate}
                 onChange={handleChange}
+                required
               />
             </div>
 

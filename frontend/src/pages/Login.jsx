@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Alert } from '../components/UI';
+import { FcGoogle } from "react-icons/fc";
 
 export default function Login() {
   const { login, user, loading: authLoading } = useAuth();
@@ -94,6 +95,23 @@ export default function Login() {
             <button type="submit" className="btn btn-primary btn-full" disabled={submitting}>
               {submitting ? 'Signing in...' : 'Sign in'}
             </button>
+
+            <div className="auth-divider">
+              <span>OR</span>
+            </div>
+
+            <button
+              type="button"
+              className="google-btn"
+              onClick={() => {
+                window.location.href =
+                  "http://localhost:8080/oauth2/authorization/google";
+              }}
+            >
+              <FcGoogle className="google-icon" />
+              <span>Continue with Google</span>
+            </button>
+                        
           </form>
 
           <p className="auth-footer">

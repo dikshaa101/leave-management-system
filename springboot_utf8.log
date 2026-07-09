@@ -1,0 +1,72 @@
+﻿[INFO] Scanning for projects...
+[INFO] 
+[INFO] ------------------< com.diksha:leavemanagementsystem >------------------
+[INFO] Building  0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] >>> spring-boot:4.1.0:run (default-cli) > test-compile @ leavemanagementsystem >>>
+[INFO] 
+[INFO] --- resources:3.5.0:resources (default-resources) @ leavemanagementsystem ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 0 resource from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.15.0:compile (default-compile) @ leavemanagementsystem ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.5.0:testResources (default-testResources) @ leavemanagementsystem ---
+[INFO] Copying 0 resource from src\test\resources to target\test-classes
+[INFO] 
+[INFO] --- compiler:3.15.0:testCompile (default-testCompile) @ leavemanagementsystem ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] <<< spring-boot:4.1.0:run (default-cli) < test-compile @ leavemanagementsystem <<<
+[INFO] 
+[INFO] 
+[INFO] --- spring-boot:4.1.0:run (default-cli) @ leavemanagementsystem ---
+[INFO] Attaching agents: []
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v4.1.0)
+
+2026-07-08T15:27:36.819+05:30  INFO 33952 --- [LeaveManagement] [           main] c.d.l.LeavemanagementsystemApplication   : Starting LeavemanagementsystemApplication using Java 21.0.10 with PID 33952 (D:\leavemanagementsystem\target\classes started by Dell in D:\leavemanagementsystem)
+2026-07-08T15:27:36.822+05:30  INFO 33952 --- [LeaveManagement] [           main] c.d.l.LeavemanagementsystemApplication   : No active profile set, falling back to 1 default profile: "default"
+2026-07-08T15:27:38.053+05:30  INFO 33952 --- [LeaveManagement] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-07-08T15:27:38.182+05:30  INFO 33952 --- [LeaveManagement] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 92 ms. Found 4 JPA repository interfaces.
+2026-07-08T15:27:39.202+05:30  INFO 33952 --- [LeaveManagement] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 8080 (http)
+2026-07-08T15:27:39.223+05:30  INFO 33952 --- [LeaveManagement] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-07-08T15:27:39.223+05:30  INFO 33952 --- [LeaveManagement] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.22]
+2026-07-08T15:27:39.310+05:30  INFO 33952 --- [LeaveManagement] [           main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 2435 ms
+2026-07-08T15:27:39.627+05:30  INFO 33952 --- [LeaveManagement] [           main] org.hibernate.orm.jpa                    : HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-07-08T15:27:39.689+05:30  INFO 33952 --- [LeaveManagement] [           main] org.hibernate.orm.core                   : HHH000001: Hibernate ORM core version 7.4.1.Final
+2026-07-08T15:27:40.180+05:30  INFO 33952 --- [LeaveManagement] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-07-08T15:27:40.214+05:30  INFO 33952 --- [LeaveManagement] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-07-08T15:27:40.387+05:30  INFO 33952 --- [LeaveManagement] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@641bc9a8
+2026-07-08T15:27:40.388+05:30  INFO 33952 --- [LeaveManagement] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-07-08T15:27:40.461+05:30  INFO 33952 --- [LeaveManagement] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [jdbc:postgresql://localhost:5432/leave_management]
+	Database driver: PostgreSQL JDBC Driver
+	Database dialect: PostgreSQLDialect
+	Database version: 18.3
+	Default catalog/schema: leave_management/public
+	Autocommit mode: undefined/unknown
+	Isolation level: READ_COMMITTED [default READ_COMMITTED]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-07-08T15:27:41.551+05:30  INFO 33952 --- [LeaveManagement] [           main] org.hibernate.orm.core                   : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-07-08T15:27:41.646+05:30  INFO 33952 --- [LeaveManagement] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-07-08T15:27:41.722+05:30  INFO 33952 --- [LeaveManagement] [           main] o.s.d.j.r.query.QueryEnhancerFactories   : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-07-08T15:27:42.742+05:30  INFO 33952 --- [LeaveManagement] [           main] eAuthenticationProviderManagerConfigurer : Global AuthenticationManager configured with AuthenticationProvider bean with name authenticationProvider
+2026-07-08T15:27:42.743+05:30  WARN 33952 --- [LeaveManagement] [           main] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with an AuthenticationProvider bean. UserDetailsService beans will not be used by Spring Security for automatically configuring username/password login. Consider removing the AuthenticationProvider bean. Alternatively, consider using the UserDetailsService in a manually instantiated DaoAuthenticationProvider. If the current configuration is intentional, to turn off this warning, increase the logging level of 'org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer' to ERROR
+2026-07-08T15:27:43.193+05:30  WARN 33952 --- [LeaveManagement] [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-07-08T15:27:44.197+05:30  INFO 33952 --- [LeaveManagement] [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 1 endpoint beneath base path '/actuator'
+2026-07-08T15:27:44.300+05:30  INFO 33952 --- [LeaveManagement] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 8080 (http) with context path '/'
+2026-07-08T15:27:44.309+05:30  INFO 33952 --- [LeaveManagement] [           main] c.d.l.LeavemanagementsystemApplication   : Started LeavemanagementsystemApplication in 7.918 seconds (process running for 8.351)

@@ -35,3 +35,9 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Spring Boot configuration
+src/main/resources/application.properties
+
+# Log files
+*.log
