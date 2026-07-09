@@ -26,14 +26,19 @@ public class RegisterRequest {
     @NotBlank
     private String fullName;
 
+    @NotBlank
     @Email
     private String email;
 
+    @NotBlank
     private String phone;
 
+    @NotBlank
     private String department;
 
+    @NotBlank
     private String designation;
+
 
     private LocalDate joiningDate;
 

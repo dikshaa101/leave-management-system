@@ -14,6 +14,7 @@ import Employees from './pages/manager/Employees';
 import TeamAvailability from './pages/manager/TeamAvailability';
 import ManagerProfile from './pages/manager/Profile';
 import './styles/global.css';
+import OAuth2Success from './pages/OAuth2Success';
 
 function RootRedirect() {
   const { user, loading } = useAuth();
@@ -37,6 +38,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<RootRedirect />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/oauth2/success"element={<OAuth2Success />}/>
           <Route path="/register" element={<Register />} />
 
           <Route
