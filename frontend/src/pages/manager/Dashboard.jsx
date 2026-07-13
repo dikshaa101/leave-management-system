@@ -16,7 +16,7 @@ import LeaveBalanceDistribution from '../../components/dashboard/LeaveBalanceDis
 import PendingRequestsTable from '../../components/dashboard/PendingRequestsTable';
 import RecentActivity, { buildActivityFeed } from '../../components/dashboard/RecentActivity';
 import QuickActions from '../../components/dashboard/QuickActions';
-import { countBy, getMonthlyLeaveTrend, getBalanceBands, isToday } from '../../components/dashboard/dashboardUtils';
+import { countBy, getMonthlyLeaveTrend, getBalanceBands, getTotalRemainingBalance, isToday } from '../../components/dashboard/dashboardUtils';
 
 const managerLinks = [
   { to: '/manager', label: 'Dashboard', end: true },
@@ -25,6 +25,7 @@ const managerLinks = [
   { to: '/manager/employees', label: 'Employees' },
   { to: '/manager/availability', label: 'Team Availability' },
   { to: '/manager/holidays', label: 'Holidays' },
+  { to: '/manager/leave-policies', label: 'Leave Policies' },
   { to: '/manager/profile', label: 'Profile' },
 ];
 
@@ -122,7 +123,7 @@ export default function ManagerDashboard() {
 
   const averageBalance = employeeCount
     ? Math.round(
-        employees.reduce((sum, employee) => sum + Number(employee.leaveBalance || 0), 0) / employeeCount
+        employees.reduce((sum, employee) => sum + getTotalRemainingBalance(employee), 0) / employeeCount
       )
     : 0;
 

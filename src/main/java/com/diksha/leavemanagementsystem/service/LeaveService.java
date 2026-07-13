@@ -9,8 +9,10 @@ import com.diksha.leavemanagementsystem.entity.LeaveStatus;
 import com.diksha.leavemanagementsystem.entity.Role;
 import com.diksha.leavemanagementsystem.entity.User;
 import com.diksha.leavemanagementsystem.event.LeaveAppliedEvent;
+import com.diksha.leavemanagementsystem.exception.BadRequestException;
 import com.diksha.leavemanagementsystem.exception.ResourceNotFoundException;
 import com.diksha.leavemanagementsystem.repository.EmployeeRepository;
+import com.diksha.leavemanagementsystem.repository.LeavePolicyRepository;
 import com.diksha.leavemanagementsystem.repository.LeaveRepository;
 import com.diksha.leavemanagementsystem.repository.UserRepository;
 import com.diksha.leavemanagementsystem.util.DateUtils;
@@ -19,6 +21,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -32,6 +35,8 @@ public class LeaveService {
     private final UserRepository userRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final HolidayService holidayService;
+    private final LeavePolicyRepository leavePolicyRepository;
+    private final EmployeeLeaveBalanceService employeeLeaveBalanceService;
 
     /**
      * Returns logged-in user's company.
@@ -65,6 +70,7 @@ public class LeaveService {
                         new ResourceNotFoundException("Employee not found"));
     }
 
+    @Transactional
     public LeaveResponseDto applyLeave(LeaveRequestDto dto) {
 
         Employee employee = getLoggedInEmployee();
@@ -77,16 +83,18 @@ public class LeaveService {
             throw new RuntimeException("Leave cannot be applied for past dates");
         }
 
+        leavePolicyRepository
+                .findByCompanyIdAndLeaveTypeAndActiveTrue(
+                        employee.getCompany().getId(), dto.getLeaveType())
+                .orElseThrow(() -> new BadRequestException(
+                        dto.getLeaveType() + " leave is not available for your company."));
+
         long leaveDays = calculateLeaveDays(
                 employee.getCompany(),
                 dto.getStartDate(),
                 dto.getEndDate());
 
-        if (leaveDays > employee.getLeaveBalance()) {
-            throw new RuntimeException(
-                    "Insufficient leave balance. Available: "
-                            + employee.getLeaveBalance() + " days");
-        }
+        employeeLeaveBalanceService.assertSufficientBalance(employee, dto.getLeaveType(), leaveDays);
 
         boolean overlap =
                 leaveRepository.existsByEmployeeAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
@@ -189,6 +197,7 @@ public class LeaveService {
         return mapToDto(leave);
     }
 
+    @Transactional
     public String cancelLeave(Long leaveId) {
 
         Employee employee = getLoggedInEmployee();
@@ -202,9 +211,22 @@ public class LeaveService {
                     "You can cancel only your own leave requests.");
         }
 
-        if (leave.getStatus() != LeaveStatus.PENDING) {
+        boolean isPending = leave.getStatus() == LeaveStatus.PENDING;
+        boolean isFutureApproved = leave.getStatus() == LeaveStatus.APPROVED
+                && leave.getStartDate().isAfter(LocalDate.now());
+
+        if (!isPending && !isFutureApproved) {
             throw new RuntimeException(
-                    "Only pending leave requests can be cancelled.");
+                    "Only pending or upcoming approved leave requests can be cancelled.");
+        }
+
+        if (isFutureApproved) {
+            long leaveDays = calculateLeaveDays(
+                    employee.getCompany(),
+                    leave.getStartDate(),
+                    leave.getEndDate());
+
+            employeeLeaveBalanceService.restoreBalance(employee, leave.getLeaveType(), leaveDays);
         }
 
         leave.setStatus(LeaveStatus.CANCELLED);
@@ -239,7 +261,7 @@ public class LeaveService {
      * company holidays that fall within the range. E.g. 22-26 Dec with
      * 25 Dec marked as a holiday resolves to 4 days, not 5.
      */
-    long calculateLeaveDays(Company company,
+    public long calculateLeaveDays(Company company,
                              LocalDate startDate,
                              LocalDate endDate) {
 

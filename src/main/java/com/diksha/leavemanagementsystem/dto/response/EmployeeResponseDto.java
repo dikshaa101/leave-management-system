@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 @Builder
@@ -27,6 +28,10 @@ public class EmployeeResponseDto {
 
     private LocalDate joiningDate;
 
-    private Integer leaveBalance;
+    /**
+     * Remaining balance per leave type, driven by the employee's company
+     * leave policies. Replaces the old single {@code leaveBalance} field.
+     */
+    private List<EmployeeLeaveBalanceResponseDto> leaveBalances;
 
 }

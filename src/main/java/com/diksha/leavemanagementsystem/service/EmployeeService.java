@@ -10,6 +10,7 @@ import com.diksha.leavemanagementsystem.exception.BadRequestException;
 import com.diksha.leavemanagementsystem.exception.ResourceNotFoundException;
 import com.diksha.leavemanagementsystem.repository.EmployeeRepository;
 import com.diksha.leavemanagementsystem.repository.UserRepository;
+import com.diksha.leavemanagementsystem.service.EmployeeLeaveBalanceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.security.core.Authentication;
@@ -26,6 +27,7 @@ public class EmployeeService {
     private final EmployeeRepository employeeRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmployeeLeaveBalanceService employeeLeaveBalanceService;
 
     /**
      * Logged in manager's company
@@ -74,10 +76,13 @@ public class EmployeeService {
                 .department(dto.getDepartment())
                 .designation(dto.getDesignation())
                 .joiningDate(dto.getJoiningDate())
-                .leaveBalance(20)
                 .build();
 
-        return mapToDto(employeeRepository.save(employee));
+        Employee saved = employeeRepository.save(employee);
+
+        employeeLeaveBalanceService.ensureBalancesForEmployee(saved);
+
+        return mapToDto(saved);
     }
 
     /**
@@ -109,7 +114,6 @@ public class EmployeeService {
                 .department(dto.getDepartment())
                 .designation(dto.getDesignation())
                 .joiningDate(dto.getJoiningDate())
-                .leaveBalance(20)
                 .company(company)
                 .user(user)
                 .build();
@@ -117,6 +121,8 @@ public class EmployeeService {
         user.setEmployee(employee);
 
         userRepository.save(user);
+
+        employeeLeaveBalanceService.ensureBalancesForEmployee(employee);
 
         return mapToDto(employee);
     }
@@ -251,7 +257,7 @@ public class EmployeeService {
                 .department(employee.getDepartment())
                 .designation(employee.getDesignation())
                 .joiningDate(employee.getJoiningDate())
-                .leaveBalance(employee.getLeaveBalance())
+                .leaveBalances(employeeLeaveBalanceService.getBalancesForEmployee(employee))
                 .build();
     }
 }

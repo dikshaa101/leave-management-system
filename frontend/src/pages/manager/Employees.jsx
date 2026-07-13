@@ -15,6 +15,7 @@ const managerLinks = [
   { to: '/manager/employees', label: 'Employees' },
   { to: '/manager/availability', label: 'Team Availability' },
   { to: '/manager/holidays', label: 'Holidays' },
+  { to: '/manager/leave-policies', label: 'Leave Policies' },
   { to: '/manager/profile', label: 'Profile' },
 ];
 
@@ -202,7 +203,13 @@ export default function Employees() {
                     <td>{emp.email || '—'}</td>
                     <td>{emp.department}</td>
                     <td>{emp.designation}</td>
-                    <td>{emp.leaveBalance}</td>
+                    <td className="truncate">
+                      {emp.leaveBalances?.length
+                        ? emp.leaveBalances
+                            .map((b) => `${b.leaveType}: ${b.remainingBalance}`)
+                            .join(', ')
+                        : '—'}
+                    </td>
                     <td>{formatDate(emp.joiningDate)}</td>
                     <td className="actions-cell">
                       <button type="button" className="btn btn-ghost btn-sm" onClick={() => openEdit(emp)}>

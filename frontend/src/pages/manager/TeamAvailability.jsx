@@ -14,6 +14,7 @@ const managerLinks = [
   { to: '/manager/employees', label: 'Employees' },
   { to: '/manager/availability', label: 'Team Availability' },
   { to: '/manager/holidays', label: 'Holidays' },
+  { to: '/manager/leave-policies', label: 'Leave Policies' },
   { to: '/manager/profile', label: 'Profile' },
 ];
 

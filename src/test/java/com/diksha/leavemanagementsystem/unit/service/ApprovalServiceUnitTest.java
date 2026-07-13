@@ -5,10 +5,12 @@ import com.diksha.leavemanagementsystem.dto.response.LeaveResponseDto;
 import com.diksha.leavemanagementsystem.entity.*;
 import com.diksha.leavemanagementsystem.event.LeaveApprovedEvent;
 import com.diksha.leavemanagementsystem.event.LeaveRejectedEvent;
+import com.diksha.leavemanagementsystem.exception.BadRequestException;
 import com.diksha.leavemanagementsystem.exception.ResourceNotFoundException;
 import com.diksha.leavemanagementsystem.repository.EmployeeRepository;
 import com.diksha.leavemanagementsystem.repository.LeaveRepository;
 import com.diksha.leavemanagementsystem.service.ApprovalService;
+import com.diksha.leavemanagementsystem.service.EmployeeLeaveBalanceService;
 import com.diksha.leavemanagementsystem.service.LeaveService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,6 +31,8 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -45,6 +49,9 @@ class ApprovalServiceUnitTest {
 
     @Mock
     private ApplicationEventPublisher eventPublisher;
+
+    @Mock
+    private EmployeeLeaveBalanceService employeeLeaveBalanceService;
 
     @InjectMocks
     private ApprovalService approvalService;
@@ -72,7 +79,6 @@ class ApprovalServiceUnitTest {
         employee = Employee.builder()
                 .id(1L)
                 .fullName("Test Employee")
-                .leaveBalance(10)
                 .company(company)
                 .build();
 
@@ -120,7 +126,8 @@ class ApprovalServiceUnitTest {
     void testApproveLeaveSuccess() {
         when(employeeRepository.findByUserUsername("manageruser")).thenReturn(Optional.of(manager));
         when(leaveRepository.findByIdAndEmployeeCompany(1L, company)).thenReturn(Optional.of(leaveRequest));
-        when(employeeRepository.save(any(Employee.class))).thenReturn(employee);
+        when(leaveService.calculateLeaveDays(company, leaveRequest.getStartDate(), leaveRequest.getEndDate()))
+                .thenReturn(3L);
         when(leaveRepository.save(any(LeaveRequest.class))).thenReturn(leaveRequest);
 
         String result = approvalService.approveLeave(1L, approvalRequestDto);
@@ -128,7 +135,10 @@ class ApprovalServiceUnitTest {
         assertEquals("Leave approved successfully.", result);
         assertEquals(LeaveStatus.APPROVED, leaveRequest.getStatus());
         assertNotNull(leaveRequest.getActionDate());
-        verify(employeeRepository, times(1)).save(employee);
+        verify(employeeLeaveBalanceService, times(1))
+                .assertSufficientBalance(employee, LeaveType.CASUAL, 3L);
+        verify(employeeLeaveBalanceService, times(1))
+                .deductBalance(employee, LeaveType.CASUAL, 3L);
         verify(leaveRepository, times(1)).save(leaveRequest);
         verify(eventPublisher, times(1)).publishEvent(any(LeaveApprovedEvent.class));
     }
@@ -152,11 +162,17 @@ class ApprovalServiceUnitTest {
 
     @Test
     void testApproveLeaveInsufficientBalance() {
-        employee.setLeaveBalance(1);
         when(employeeRepository.findByUserUsername("manageruser")).thenReturn(Optional.of(manager));
         when(leaveRepository.findByIdAndEmployeeCompany(1L, company)).thenReturn(Optional.of(leaveRequest));
+        when(leaveService.calculateLeaveDays(company, leaveRequest.getStartDate(), leaveRequest.getEndDate()))
+                .thenReturn(3L);
+        doThrow(new BadRequestException("Insufficient CASUAL leave balance."))
+                .when(employeeLeaveBalanceService)
+                .assertSufficientBalance(eq(employee), eq(LeaveType.CASUAL), anyLong());
 
-        assertThrows(RuntimeException.class, () -> approvalService.approveLeave(1L, approvalRequestDto));
+        assertThrows(BadRequestException.class, () -> approvalService.approveLeave(1L, approvalRequestDto));
+        verify(employeeLeaveBalanceService, never()).deductBalance(any(), any(), anyLong());
+        verify(leaveRepository, never()).save(any(LeaveRequest.class));
     }
 
     @Test
@@ -164,6 +180,8 @@ class ApprovalServiceUnitTest {
         when(employeeRepository.findByUserUsername("manageruser")).thenReturn(Optional.of(manager));
         when(leaveRepository.findByIdAndEmployeeCompany(1L, company)).thenReturn(Optional.of(leaveRequest));
         when(leaveRepository.save(any(LeaveRequest.class))).thenReturn(leaveRequest);
+        when(leaveService.calculateLeaveDays(company, leaveRequest.getStartDate(), leaveRequest.getEndDate()))
+                .thenReturn(3L);
 
         String result = approvalService.rejectLeave(1L, approvalRequestDto);
 
@@ -171,6 +189,7 @@ class ApprovalServiceUnitTest {
         assertEquals(LeaveStatus.REJECTED, leaveRequest.getStatus());
         assertNotNull(leaveRequest.getActionDate());
         verify(leaveRepository, times(1)).save(leaveRequest);
+        verify(employeeLeaveBalanceService, never()).deductBalance(any(), any(), anyLong());
         verify(eventPublisher, times(1)).publishEvent(any(LeaveRejectedEvent.class));
     }
 

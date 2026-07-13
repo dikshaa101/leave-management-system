@@ -14,6 +14,7 @@ import com.diksha.leavemanagementsystem.repository.CompanyRepository;
 import com.diksha.leavemanagementsystem.repository.EmployeeRepository;
 import com.diksha.leavemanagementsystem.repository.UserRepository;
 import com.diksha.leavemanagementsystem.security.JwtUtil;
+import com.diksha.leavemanagementsystem.service.EmployeeLeaveBalanceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -35,6 +36,7 @@ public class AuthService {
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
     private final ApplicationEventPublisher eventPublisher;
+    private final EmployeeLeaveBalanceService employeeLeaveBalanceService;
 
     public String register(RegisterRequest request) {
 
@@ -97,7 +99,6 @@ public class AuthService {
                 .department(request.getDepartment())
                 .designation(request.getDesignation())
                 .joiningDate(request.getJoiningDate())
-                .leaveBalance(20)
                 .company(company)
                 .user(user)
                 .build();
@@ -105,6 +106,11 @@ public class AuthService {
         user.setEmployee(employee);
 
         userRepository.save(user);
+
+        // Backfills balances immediately if the company already has active
+        // policies (e.g. an employee joining an existing company);
+        // otherwise a no-op until the manager creates the first policy.
+        employeeLeaveBalanceService.ensureBalancesForEmployee(employee);
 
         eventPublisher.publishEvent(
                 EmployeeRegisteredEvent.builder()
