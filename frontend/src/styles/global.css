@@ -1164,3 +1164,387 @@ tbody tr:hover {
 .auth-divider::after {
   margin-left: 1rem;
 }
+/* ===================================================
+   KPI Stat Cards (Manager Dashboard)
+   =================================================== */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.kpi-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.25rem 1.4rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--border);
+}
+
+.kpi-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  min-width: 2.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 1.25rem;
+  background: #f1f5f9;
+  color: var(--text-muted);
+}
+
+.kpi-card.kpi-warning .kpi-icon {
+  background: var(--warning-light);
+  color: var(--warning);
+}
+
+.kpi-card.kpi-success .kpi-icon {
+  background: var(--success-light);
+  color: var(--success);
+}
+
+.kpi-card.kpi-info .kpi-icon,
+.kpi-card.kpi-accent .kpi-icon {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.kpi-card.kpi-neutral .kpi-icon {
+  background: #eef2ff;
+  color: var(--accent);
+}
+
+.kpi-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.kpi-title {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.kpi-value {
+  font-size: 1.9rem;
+  font-weight: 700;
+  line-height: 1.25;
+  margin: 0.15rem 0;
+}
+
+.kpi-subtitle {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* ===================================================
+   Team Availability progress bar
+   =================================================== */
+.availability-progress-track {
+  height: 0.55rem;
+  border-radius: 999px;
+  background: #edf2f7;
+  overflow: hidden;
+  margin: 0.5rem 0 1.25rem;
+}
+
+.availability-progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--success), var(--primary));
+  transition: width 0.3s ease;
+}
+
+.availability-stat {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.availability-stat-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  min-width: 2.25rem;
+  border-radius: 50%;
+  font-size: 1rem;
+  background: #f1f5f9;
+  color: var(--text-muted);
+}
+
+/* Shared status icon accents (used in availability + activity feed) */
+.icon-success {
+  background: var(--success-light);
+  color: var(--success);
+}
+
+.icon-warning {
+  background: var(--warning-light);
+  color: var(--warning);
+}
+
+.icon-danger {
+  background: var(--danger-light);
+  color: var(--danger);
+}
+
+.icon-info,
+.icon-accent {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.icon-neutral {
+  background: #eef2ff;
+  color: var(--accent);
+}
+
+/* ===================================================
+   Pending requests table (dashboard variant)
+   =================================================== */
+.dashboard-table-wrap {
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.dashboard-table-wrap thead th {
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  z-index: 1;
+}
+
+.capitalize {
+  text-transform: capitalize;
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.icon-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
+}
+
+.icon-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.icon-btn-success {
+  color: var(--success);
+  border-color: var(--success-light);
+}
+
+.icon-btn-success:hover:not(:disabled) {
+  background: var(--success-light);
+}
+
+.icon-btn-danger {
+  color: var(--danger);
+  border-color: var(--danger-light);
+}
+
+.icon-btn-danger:hover:not(:disabled) {
+  background: var(--danger-light);
+}
+
+.bar-percent {
+  color: var(--text-muted);
+  font-weight: 500;
+  margin-left: 0.35rem;
+}
+
+/* ===================================================
+   Recent Activity feed
+   =================================================== */
+.activity-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.activity-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.85rem;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.activity-item:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.activity-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  min-width: 2.25rem;
+  border-radius: 50%;
+  background: var(--accent);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.activity-body {
+  min-width: 0;
+}
+
+.activity-body p {
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+
+.activity-time {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.activity-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  min-width: 2rem;
+  border-radius: 50%;
+  font-size: 0.9rem;
+}
+
+/* ===================================================
+   Quick Actions
+   =================================================== */
+.quick-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.85rem;
+}
+
+.quick-action {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1.1rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.quick-action:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+  background: var(--surface);
+  color: var(--primary);
+}
+
+.quick-action-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background: var(--primary-light);
+  color: var(--primary);
+  font-size: 1.05rem;
+}
+
+.quick-action-disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  font-family: var(--font);
+}
+
+.quick-action-disabled:hover {
+  transform: none;
+  box-shadow: none;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.quick-action-tag {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.1rem 0.45rem;
+}
+
+/* ===================================================
+   Responsive: KPI + Analytics grids
+   =================================================== */
+@media (max-width: 1100px) {
+  .kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .quick-actions-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .activity-item {
+    grid-template-columns: auto 1fr;
+  }
+
+  .activity-icon {
+    display: none;
+  }
+}

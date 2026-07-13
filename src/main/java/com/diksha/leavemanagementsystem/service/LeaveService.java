@@ -6,12 +6,15 @@ import com.diksha.leavemanagementsystem.entity.Company;
 import com.diksha.leavemanagementsystem.entity.Employee;
 import com.diksha.leavemanagementsystem.entity.LeaveRequest;
 import com.diksha.leavemanagementsystem.entity.LeaveStatus;
+import com.diksha.leavemanagementsystem.entity.Role;
 import com.diksha.leavemanagementsystem.entity.User;
+import com.diksha.leavemanagementsystem.event.LeaveAppliedEvent;
 import com.diksha.leavemanagementsystem.exception.ResourceNotFoundException;
 import com.diksha.leavemanagementsystem.repository.EmployeeRepository;
 import com.diksha.leavemanagementsystem.repository.LeaveRepository;
 import com.diksha.leavemanagementsystem.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -27,6 +30,7 @@ public class LeaveService {
     private final LeaveRepository leaveRepository;
     private final EmployeeRepository employeeRepository;
     private final UserRepository userRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     /**
      * Returns logged-in user's company.
@@ -103,8 +107,42 @@ public class LeaveService {
                 .employee(employee)
                 .build();
 
-        return mapToDto(
-                leaveRepository.save(leave));
+        LeaveRequest savedLeave = leaveRepository.save(leave);
+
+        notifyManagers(employee, savedLeave, leaveDays);
+
+        return mapToDto(savedLeave);
+    }
+
+    /**
+     * Notifies every manager of the applicant's company that a new leave
+     * request is awaiting review. Failure to resolve/notify managers never
+     * affects the leave application itself — it has already been saved.
+     */
+    private void notifyManagers(Employee employee, LeaveRequest savedLeave, long leaveDays) {
+
+        List<Employee> managers = employeeRepository
+                .findByCompanyIdAndUserRole(employee.getCompany().getId(), Role.MANAGER);
+
+        managers.forEach(manager -> {
+            if (manager.getEmail() == null || manager.getEmail().isBlank()) {
+                return;
+            }
+
+            eventPublisher.publishEvent(
+                    LeaveAppliedEvent.builder()
+                            .recipientEmail(manager.getEmail())
+                            .managerName(manager.getFullName())
+                            .employeeName(employee.getFullName())
+                            .leaveType(savedLeave.getLeaveType().name())
+                            .startDate(savedLeave.getStartDate())
+                            .endDate(savedLeave.getEndDate())
+                            .totalDays(leaveDays)
+                            .reason(savedLeave.getReason())
+                            .appliedOn(savedLeave.getAppliedOn())
+                            .build()
+            );
+        });
     }
 
     public List<LeaveResponseDto> getMyLeaves() {

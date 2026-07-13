@@ -6,10 +6,13 @@ import com.diksha.leavemanagementsystem.entity.Company;
 import com.diksha.leavemanagementsystem.entity.Employee;
 import com.diksha.leavemanagementsystem.entity.LeaveRequest;
 import com.diksha.leavemanagementsystem.entity.LeaveStatus;
+import com.diksha.leavemanagementsystem.event.LeaveApprovedEvent;
+import com.diksha.leavemanagementsystem.event.LeaveRejectedEvent;
 import com.diksha.leavemanagementsystem.exception.ResourceNotFoundException;
 import com.diksha.leavemanagementsystem.repository.EmployeeRepository;
 import com.diksha.leavemanagementsystem.repository.LeaveRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -25,6 +28,7 @@ public class ApprovalService {
     private final LeaveRepository leaveRepository;
     private final EmployeeRepository employeeRepository;
     private final LeaveService leaveService;
+    private final ApplicationEventPublisher eventPublisher;
 
     /**
      * Returns logged-in manager's company.
@@ -104,6 +108,19 @@ public class ApprovalService {
 
         leaveRepository.save(leave);
 
+        eventPublisher.publishEvent(
+                LeaveApprovedEvent.builder()
+                        .recipientEmail(employee.getEmail())
+                        .employeeName(employee.getFullName())
+                        .leaveType(leave.getLeaveType().name())
+                        .startDate(leave.getStartDate())
+                        .endDate(leave.getEndDate())
+                        .totalDays(leaveDays)
+                        .remarks(leave.getManagerRemarks())
+                        .actionDate(leave.getActionDate())
+                        .build()
+        );
+
         return "Leave approved successfully.";
     }
 
@@ -133,6 +150,23 @@ public class ApprovalService {
         leave.setActionDate(LocalDate.now());
 
         leaveRepository.save(leave);
+
+        long leaveDays = ChronoUnit.DAYS.between(
+                leave.getStartDate(),
+                leave.getEndDate()) + 1;
+
+        eventPublisher.publishEvent(
+                LeaveRejectedEvent.builder()
+                        .recipientEmail(leave.getEmployee().getEmail())
+                        .employeeName(leave.getEmployee().getFullName())
+                        .leaveType(leave.getLeaveType().name())
+                        .startDate(leave.getStartDate())
+                        .endDate(leave.getEndDate())
+                        .totalDays(leaveDays)
+                        .remarks(leave.getManagerRemarks())
+                        .actionDate(leave.getActionDate())
+                        .build()
+        );
 
         return "Leave rejected successfully.";
     }

@@ -1,6 +1,7 @@
 package com.diksha.leavemanagementsystem.repository;
 
 import com.diksha.leavemanagementsystem.entity.Employee;
+import com.diksha.leavemanagementsystem.entity.Role;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -54,5 +55,11 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     WHERE e.email = :email
     """)
     Optional<Employee> findByEmailWithUser(@Param("email") String email);
+
+    /**
+     * Used by the email notification system to find which manager(s) of a
+     * company should be notified when an employee applies for leave.
+     */
+    List<Employee> findByCompanyIdAndUserRole(Long companyId, Role role);
 
 }

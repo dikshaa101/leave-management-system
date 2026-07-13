@@ -7,6 +7,7 @@ import com.diksha.leavemanagementsystem.entity.Company;
 import com.diksha.leavemanagementsystem.entity.Employee;
 import com.diksha.leavemanagementsystem.entity.Role;
 import com.diksha.leavemanagementsystem.entity.User;
+import com.diksha.leavemanagementsystem.event.EmployeeRegisteredEvent;
 import com.diksha.leavemanagementsystem.exception.BadRequestException;
 import com.diksha.leavemanagementsystem.exception.ResourceNotFoundException;
 import com.diksha.leavemanagementsystem.repository.CompanyRepository;
@@ -14,6 +15,7 @@ import com.diksha.leavemanagementsystem.repository.EmployeeRepository;
 import com.diksha.leavemanagementsystem.repository.UserRepository;
 import com.diksha.leavemanagementsystem.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -32,6 +34,7 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
+    private final ApplicationEventPublisher eventPublisher;
 
     public String register(RegisterRequest request) {
 
@@ -102,6 +105,18 @@ public class AuthService {
         user.setEmployee(employee);
 
         userRepository.save(user);
+
+        eventPublisher.publishEvent(
+                EmployeeRegisteredEvent.builder()
+                        .employeeName(employee.getFullName())
+                        .employeeEmail(employee.getEmail())
+                        .username(user.getUsername())
+                        .companyName(company.getCompanyName())
+                        .department(employee.getDepartment())
+                        .designation(employee.getDesignation())
+                        .role(userRole.name())
+                        .build()
+        );
 
         return "User Registered Successfully";
     }

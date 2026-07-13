@@ -6,6 +6,7 @@ import com.diksha.leavemanagementsystem.dto.response.JwtResponse;
 import com.diksha.leavemanagementsystem.entity.Company;
 import com.diksha.leavemanagementsystem.entity.Role;
 import com.diksha.leavemanagementsystem.entity.User;
+import com.diksha.leavemanagementsystem.event.EmployeeRegisteredEvent;
 import com.diksha.leavemanagementsystem.repository.CompanyRepository;
 import com.diksha.leavemanagementsystem.repository.EmployeeRepository;
 import com.diksha.leavemanagementsystem.repository.UserRepository;
@@ -17,6 +18,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -52,6 +54,9 @@ class AuthServiceUnitTest {
 
     @Mock
     private UserDetailsService userDetailsService;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private AuthService authService;
@@ -107,6 +112,7 @@ class AuthServiceUnitTest {
         verify(companyRepository, times(1)).findByCompanyCode("COMP101");
         verify(passwordEncoder, times(1)).encode("password123");
         verify(userRepository, times(1)).save(any(User.class));
+        verify(eventPublisher, times(1)).publishEvent(any(EmployeeRegisteredEvent.class));
     }
 
     @Test
