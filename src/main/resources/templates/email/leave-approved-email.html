@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Leave Approved</title>
+    <style>
+        body { margin: 0; padding: 0; background-color: #f4f6f9; font-family: 'Segoe UI', Arial, sans-serif; }
+        .wrapper { width: 100%; background-color: #f4f6f9; padding: 32px 0; }
+        .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(15,23,42,0.06); }
+        .header { background: linear-gradient(135deg, #059669 0%, #047857 100%); padding: 28px 32px; }
+        .header h1 { margin: 0; color: #ffffff; font-size: 20px; font-weight: 700; letter-spacing: 0.02em; }
+        .badge { display: inline-block; margin-top: 6px; color: #d1fae5; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+        .body { padding: 32px; color: #1e293b; }
+        .body p { font-size: 15px; line-height: 1.6; margin: 0 0 16px; }
+        .status-pill { display: inline-block; background-color: #ecfdf5; color: #059669; font-size: 13px; font-weight: 700; padding: 6px 14px; border-radius: 999px; margin-bottom: 8px; }
+        .details { background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px 20px; margin: 20px 0; }
+        .details table { width: 100%; border-collapse: collapse; }
+        .details td { padding: 6px 0; font-size: 14px; color: #475569; }
+        .details td.label { color: #64748b; width: 40%; }
+        .details td.value { color: #1e293b; font-weight: 600; text-align: right; }
+        .remarks-box { background-color: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 14px 18px; font-size: 14px; color: #065f46; margin: 16px 0; }
+        .btn { display: inline-block; background-color: #059669; color: #ffffff !important; text-decoration: none; font-weight: 600; font-size: 14px; padding: 12px 28px; border-radius: 8px; margin-top: 12px; }
+        .footer { padding: 24px 32px; text-align: center; }
+        .footer p { font-size: 12px; color: #94a3b8; margin: 4px 0; }
+        @media only screen and (max-width: 600px) {
+            .container { border-radius: 0; }
+            .header, .body, .footer { padding-left: 20px !important; padding-right: 20px !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <div class="header">
+                <h1>LeaveFlow</h1>
+                <span class="badge">Request approved</span>
+            </div>
+            <div class="body">
+                <span class="status-pill">&#10003; Approved</span>
+                <p>Hi <strong th:text="${employeeName}">there</strong>,</p>
+                <p>Good news — your leave request has been approved.</p>
+
+                <div class="details">
+                    <table>
+                        <tr>
+                            <td class="label">Leave Type</td>
+                            <td class="value" th:text="${leaveType}">Casual</td>
+                        </tr>
+                        <tr>
+                            <td class="label">Duration</td>
+                            <td class="value">
+                                <span th:text="${#temporals.format(startDate, 'MMM dd, yyyy')}">Jan 01, 2026</span>
+                                &ndash;
+                                <span th:text="${#temporals.format(endDate, 'MMM dd, yyyy')}">Jan 03, 2026</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="label">Total Days</td>
+                            <td class="value" th:text="${totalDays}">3</td>
+                        </tr>
+                        <tr>
+                            <td class="label">Approved On</td>
+                            <td class="value" th:text="${#temporals.format(actionDate, 'MMM dd, yyyy')}">Jan 02, 2026</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="remarks-box" th:if="${remarks != null and !remarks.isEmpty()}">
+                    <strong>Manager's remarks:</strong> <span th:text="${remarks}">Enjoy your time off!</span>
+                </div>
+
+                <a class="btn" th:href="${myLeavesUrl}" href="#">View My Leaves</a>
+            </div>
+            <div class="footer">
+                <p>This is an automated message from LeaveFlow. Please do not reply to this email.</p>
+                <p>&copy; LeaveFlow. All rights reserved.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

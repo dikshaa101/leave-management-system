@@ -6,10 +6,12 @@ import com.diksha.leavemanagementsystem.entity.Company;
 import com.diksha.leavemanagementsystem.entity.Employee;
 import com.diksha.leavemanagementsystem.entity.Role;
 import com.diksha.leavemanagementsystem.entity.User;
+import com.diksha.leavemanagementsystem.event.EmployeeRegisteredEvent;
 import com.diksha.leavemanagementsystem.exception.ResourceNotFoundException;
 import com.diksha.leavemanagementsystem.repository.EmployeeRepository;
 import com.diksha.leavemanagementsystem.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,6 +24,7 @@ public class EmployeeAccountService {
     private final UserRepository userRepository;
     private final EmployeeRepository employeeRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ApplicationEventPublisher eventPublisher;
 
     public EmployeeResponseDto createEmployee(CreateEmployeeRequest request) {
 
@@ -66,6 +69,18 @@ public class EmployeeAccountService {
         employeeUser.setEmployee(employee);
 
         userRepository.save(employeeUser);
+
+        eventPublisher.publishEvent(
+                EmployeeRegisteredEvent.builder()
+                        .employeeName(employee.getFullName())
+                        .employeeEmail(employee.getEmail())
+                        .username(employeeUser.getUsername())
+                        .companyName(company.getCompanyName())
+                        .department(employee.getDepartment())
+                        .designation(employee.getDesignation())
+                        .role(Role.EMPLOYEE.name())
+                        .build()
+        );
 
         return mapToDto(employee);
     }

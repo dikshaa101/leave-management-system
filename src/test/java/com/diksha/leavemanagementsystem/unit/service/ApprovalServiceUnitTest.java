@@ -3,6 +3,8 @@ package com.diksha.leavemanagementsystem.unit.service;
 import com.diksha.leavemanagementsystem.dto.request.ApprovalRequestDto;
 import com.diksha.leavemanagementsystem.dto.response.LeaveResponseDto;
 import com.diksha.leavemanagementsystem.entity.*;
+import com.diksha.leavemanagementsystem.event.LeaveApprovedEvent;
+import com.diksha.leavemanagementsystem.event.LeaveRejectedEvent;
 import com.diksha.leavemanagementsystem.exception.ResourceNotFoundException;
 import com.diksha.leavemanagementsystem.repository.EmployeeRepository;
 import com.diksha.leavemanagementsystem.repository.LeaveRepository;
@@ -15,6 +17,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
@@ -39,6 +42,9 @@ class ApprovalServiceUnitTest {
 
     @Mock
     private LeaveService leaveService;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private ApprovalService approvalService;
@@ -124,6 +130,7 @@ class ApprovalServiceUnitTest {
         assertNotNull(leaveRequest.getActionDate());
         verify(employeeRepository, times(1)).save(employee);
         verify(leaveRepository, times(1)).save(leaveRequest);
+        verify(eventPublisher, times(1)).publishEvent(any(LeaveApprovedEvent.class));
     }
 
     @Test
@@ -164,6 +171,7 @@ class ApprovalServiceUnitTest {
         assertEquals(LeaveStatus.REJECTED, leaveRequest.getStatus());
         assertNotNull(leaveRequest.getActionDate());
         verify(leaveRepository, times(1)).save(leaveRequest);
+        verify(eventPublisher, times(1)).publishEvent(any(LeaveRejectedEvent.class));
     }
 
     @Test
