@@ -6,6 +6,7 @@ const employeeLinks = [
   { to: '/employee', label: 'Dashboard', end: true },
   { to: '/employee/apply', label: 'Apply Leave' },
   { to: '/employee/leaves', label: 'My Leaves' },
+  { to: '/employee/holidays', label: 'Holidays' },
   { to: '/employee/profile', label: 'Profile' },
 ];
 
