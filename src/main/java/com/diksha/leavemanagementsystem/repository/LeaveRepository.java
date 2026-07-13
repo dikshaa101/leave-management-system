@@ -4,6 +4,7 @@ import com.diksha.leavemanagementsystem.entity.Company;
 import com.diksha.leavemanagementsystem.entity.Employee;
 import com.diksha.leavemanagementsystem.entity.LeaveRequest;
 import com.diksha.leavemanagementsystem.entity.LeaveStatus;
+import com.diksha.leavemanagementsystem.entity.LeaveType;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDate;
@@ -70,5 +71,12 @@ public interface LeaveRepository extends JpaRepository<LeaveRequest, Long> {
             LocalDate endDate,
             LocalDate startDate
     );
+
+    /**
+     * Whether any leave request of this type has ever been raised by an
+     * employee of this company — used to block deleting a leave policy
+     * that is already in use.
+     */
+    boolean existsByEmployeeCompanyIdAndLeaveType(Long companyId, LeaveType leaveType);
 
 }

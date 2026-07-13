@@ -3,10 +3,14 @@ package com.diksha.leavemanagementsystem.unit.service;
 import com.diksha.leavemanagementsystem.dto.request.LeaveRequestDto;
 import com.diksha.leavemanagementsystem.dto.response.LeaveResponseDto;
 import com.diksha.leavemanagementsystem.entity.*;
+import com.diksha.leavemanagementsystem.exception.BadRequestException;
 import com.diksha.leavemanagementsystem.exception.ResourceNotFoundException;
 import com.diksha.leavemanagementsystem.repository.EmployeeRepository;
+import com.diksha.leavemanagementsystem.repository.LeavePolicyRepository;
 import com.diksha.leavemanagementsystem.repository.LeaveRepository;
 import com.diksha.leavemanagementsystem.repository.UserRepository;
+import com.diksha.leavemanagementsystem.service.EmployeeLeaveBalanceService;
+import com.diksha.leavemanagementsystem.service.HolidayService;
 import com.diksha.leavemanagementsystem.service.LeaveService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,9 +27,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -43,6 +50,15 @@ class LeaveServiceUnitTest {
     @Mock
     private ApplicationEventPublisher eventPublisher;
 
+    @Mock
+    private HolidayService holidayService;
+
+    @Mock
+    private LeavePolicyRepository leavePolicyRepository;
+
+    @Mock
+    private EmployeeLeaveBalanceService employeeLeaveBalanceService;
+
     @InjectMocks
     private LeaveService leaveService;
 
@@ -52,6 +68,7 @@ class LeaveServiceUnitTest {
     private Authentication authentication;
     private Company company;
     private User user;
+    private LeavePolicy sickPolicy;
 
     @BeforeEach
     void setUp() {
@@ -74,8 +91,15 @@ class LeaveServiceUnitTest {
                 .phone("1234567890")
                 .department("IT")
                 .designation("Developer")
-                .leaveBalance(20)
                 .company(company)
+                .build();
+
+        sickPolicy = LeavePolicy.builder()
+                .id(1L)
+                .company(company)
+                .leaveType(LeaveType.SICK)
+                .totalLeaves(20)
+                .active(true)
                 .build();
 
         leaveRequestDto = new LeaveRequestDto();
@@ -99,11 +123,16 @@ class LeaveServiceUnitTest {
         SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
         securityContext.setAuthentication(authentication);
         SecurityContextHolder.setContext(securityContext);
+
+        lenient().when(holidayService.getHolidayDatesInRange(any(), any(), any()))
+                .thenReturn(Set.of());
     }
 
     @Test
     void testApplyLeaveSuccess() {
         when(employeeRepository.findByUserUsername("testuser")).thenReturn(Optional.of(employee));
+        when(leavePolicyRepository.findByCompanyIdAndLeaveTypeAndActiveTrue(company.getId(), LeaveType.SICK))
+                .thenReturn(Optional.of(sickPolicy));
         when(leaveRepository.existsByEmployeeAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
                 employee, leaveRequestDto.getEndDate(), leaveRequestDto.getStartDate())).thenReturn(false);
         when(leaveRepository.save(any(LeaveRequest.class))).thenReturn(leaveRequest);
@@ -119,16 +148,44 @@ class LeaveServiceUnitTest {
 
     @Test
     void testApplyLeaveInsufficientBalance() {
-        employee.setLeaveBalance(3);
         LeaveRequestDto largeLeaveRequest = new LeaveRequestDto();
         largeLeaveRequest.setStartDate(LocalDate.now().plusDays(5));
         largeLeaveRequest.setEndDate(LocalDate.now().plusDays(15));
         largeLeaveRequest.setReason("Extended leave");
         largeLeaveRequest.setLeaveType(LeaveType.CASUAL);
 
-        when(employeeRepository.findByUserUsername("testuser")).thenReturn(Optional.of(employee));
+        LeavePolicy casualPolicy = LeavePolicy.builder()
+                .id(2L)
+                .company(company)
+                .leaveType(LeaveType.CASUAL)
+                .totalLeaves(3)
+                .active(true)
+                .build();
 
-        assertThrows(RuntimeException.class, () -> leaveService.applyLeave(largeLeaveRequest));
+        when(employeeRepository.findByUserUsername("testuser")).thenReturn(Optional.of(employee));
+        when(leavePolicyRepository.findByCompanyIdAndLeaveTypeAndActiveTrue(company.getId(), LeaveType.CASUAL))
+                .thenReturn(Optional.of(casualPolicy));
+        doThrow(new BadRequestException("Insufficient CASUAL leave balance."))
+                .when(employeeLeaveBalanceService)
+                .assertSufficientBalance(eq(employee), eq(LeaveType.CASUAL), anyLong());
+
+        assertThrows(BadRequestException.class, () -> leaveService.applyLeave(largeLeaveRequest));
+        verify(leaveRepository, never()).save(any(LeaveRequest.class));
+    }
+
+    @Test
+    void testApplyLeavePolicyNotActive() {
+        LeaveRequestDto dto = new LeaveRequestDto();
+        dto.setStartDate(LocalDate.now().plusDays(5));
+        dto.setEndDate(LocalDate.now().plusDays(6));
+        dto.setReason("No policy");
+        dto.setLeaveType(LeaveType.MATERNITY);
+
+        when(employeeRepository.findByUserUsername("testuser")).thenReturn(Optional.of(employee));
+        when(leavePolicyRepository.findByCompanyIdAndLeaveTypeAndActiveTrue(company.getId(), LeaveType.MATERNITY))
+                .thenReturn(Optional.empty());
+
+        assertThrows(BadRequestException.class, () -> leaveService.applyLeave(dto));
         verify(leaveRepository, never()).save(any(LeaveRequest.class));
     }
 
@@ -163,6 +220,8 @@ class LeaveServiceUnitTest {
     @Test
     void testApplyLeaveOverlappingLeave() {
         when(employeeRepository.findByUserUsername("testuser")).thenReturn(Optional.of(employee));
+        when(leavePolicyRepository.findByCompanyIdAndLeaveTypeAndActiveTrue(company.getId(), LeaveType.SICK))
+                .thenReturn(Optional.of(sickPolicy));
         when(leaveRepository.existsByEmployeeAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
                 employee, leaveRequestDto.getEndDate(), leaveRequestDto.getStartDate())).thenReturn(true);
 
@@ -236,11 +295,31 @@ class LeaveServiceUnitTest {
         assertEquals("Leave cancelled successfully.", result);
         assertEquals(LeaveStatus.CANCELLED, leaveRequest.getStatus());
         verify(leaveRepository, times(1)).save(leaveRequest);
+        verify(employeeLeaveBalanceService, never()).restoreBalance(any(), any(), anyLong());
     }
 
     @Test
-    void testCancelLeaveNotPending() {
+    void testCancelFutureApprovedLeaveRestoresBalance() {
         leaveRequest.setStatus(LeaveStatus.APPROVED);
+        leaveRequest.setEmployee(employee);
+        when(employeeRepository.findByUserUsername("testuser")).thenReturn(Optional.of(employee));
+        when(leaveRepository.findById(1L)).thenReturn(Optional.of(leaveRequest));
+
+        String result = leaveService.cancelLeave(1L);
+
+        assertEquals("Leave cancelled successfully.", result);
+        assertEquals(LeaveStatus.CANCELLED, leaveRequest.getStatus());
+        verify(employeeLeaveBalanceService, times(1))
+                .restoreBalance(eq(employee), eq(LeaveType.SICK), anyLong());
+        verify(leaveRepository, times(1)).save(leaveRequest);
+    }
+
+    @Test
+    void testCancelPastApprovedLeaveNotAllowed() {
+        leaveRequest.setStatus(LeaveStatus.APPROVED);
+        leaveRequest.setStartDate(LocalDate.now().minusDays(10));
+        leaveRequest.setEndDate(LocalDate.now().minusDays(5));
+        leaveRequest.setEmployee(employee);
         when(employeeRepository.findByUserUsername("testuser")).thenReturn(Optional.of(employee));
         when(leaveRepository.findById(1L)).thenReturn(Optional.of(leaveRequest));
 

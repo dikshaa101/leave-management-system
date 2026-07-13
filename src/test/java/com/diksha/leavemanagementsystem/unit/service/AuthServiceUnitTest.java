@@ -12,6 +12,7 @@ import com.diksha.leavemanagementsystem.repository.EmployeeRepository;
 import com.diksha.leavemanagementsystem.repository.UserRepository;
 import com.diksha.leavemanagementsystem.security.JwtUtil;
 import com.diksha.leavemanagementsystem.service.AuthService;
+import com.diksha.leavemanagementsystem.service.EmployeeLeaveBalanceService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -57,6 +58,9 @@ class AuthServiceUnitTest {
 
     @Mock
     private ApplicationEventPublisher eventPublisher;
+
+    @Mock
+    private EmployeeLeaveBalanceService employeeLeaveBalanceService;
 
     @InjectMocks
     private AuthService authService;

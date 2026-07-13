@@ -8,6 +8,7 @@ import com.diksha.leavemanagementsystem.entity.User;
 import com.diksha.leavemanagementsystem.exception.ResourceNotFoundException;
 import com.diksha.leavemanagementsystem.repository.EmployeeRepository;
 import com.diksha.leavemanagementsystem.repository.UserRepository;
+import com.diksha.leavemanagementsystem.service.EmployeeLeaveBalanceService;
 import com.diksha.leavemanagementsystem.service.EmployeeService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,6 +46,9 @@ class EmployeeServiceUnitTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    @Mock
+    private EmployeeLeaveBalanceService employeeLeaveBalanceService;
+
     @InjectMocks
     private EmployeeService employeeService;
 
@@ -76,7 +80,6 @@ class EmployeeServiceUnitTest {
                 .department("IT")
                 .designation("Developer")
                 .joiningDate(LocalDate.now())
-                .leaveBalance(20)
                 .company(company)
                 .build();
 
@@ -89,6 +92,9 @@ class EmployeeServiceUnitTest {
         requestDto.setJoiningDate(LocalDate.now());
         requestDto.setUsername("testuser");
         requestDto.setPassword("password123");
+
+        lenient().when(employeeLeaveBalanceService.getBalancesForEmployee(any(Employee.class)))
+                .thenReturn(List.of());
     }
 
     private void setSecurityContextForUsername(String username) {
@@ -117,8 +123,9 @@ class EmployeeServiceUnitTest {
 
         assertNotNull(response);
         assertEquals("Test Employee", response.getFullName());
-        assertEquals(20, response.getLeaveBalance());
+        assertNotNull(response.getLeaveBalances());
         verify(employeeRepository, times(1)).save(any(Employee.class));
+        verify(employeeLeaveBalanceService, times(1)).ensureBalancesForEmployee(any(Employee.class));
     }
 
     @Test

@@ -4,24 +4,32 @@ import Layout from '../../components/Layout';
 import { PageHeader, StatusBadge, formatDate, EmptyState } from '../../components/UI';
 import { useAuth } from '../../context/AuthContext';
 import { getMyLeaves } from '../../api/leave';
+import { getMyLeaveBalances } from '../../api/leavePolicy';
 
 const employeeLinks = [
   { to: '/employee', label: 'Dashboard', end: true },
   { to: '/employee/apply', label: 'Apply Leave' },
   { to: '/employee/leaves', label: 'My Leaves' },
   { to: '/employee/holidays', label: 'Holidays' },
+  { to: '/employee/balances', label: 'Leave Balances' },
   { to: '/employee/profile', label: 'Profile' },
 ];
 
 export default function EmployeeDashboard() {
   const { profile } = useAuth();
   const [leaves, setLeaves] = useState([]);
+  const [balances, setBalances] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getMyLeaves()
-      .then(setLeaves)
-      .catch(() => setLeaves([]))
+    Promise.all([
+      getMyLeaves().catch(() => []),
+      getMyLeaveBalances().catch(() => []),
+    ])
+      .then(([leavesData, balancesData]) => {
+        setLeaves(leavesData);
+        setBalances(balancesData);
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -42,11 +50,13 @@ export default function EmployeeDashboard() {
       />
 
       <div className="stats-grid">
-        <div className="stat-card highlight">
-          <span className="stat-label">Leave Balance</span>
-          <span className="stat-value">{profile?.leaveBalance ?? '—'}</span>
-          <span className="stat-hint">days remaining</span>
-        </div>
+        {balances.map((balance) => (
+          <div key={balance.leaveType} className="stat-card highlight">
+            <span className="stat-label">{balance.leaveType} Leave</span>
+            <span className="stat-value">{balance.remainingBalance}</span>
+            <span className="stat-hint">of {balance.totalAllocated} days remaining</span>
+          </div>
+        ))}
         <div className="stat-card">
           <span className="stat-label">Pending Requests</span>
           <span className="stat-value">{pending}</span>

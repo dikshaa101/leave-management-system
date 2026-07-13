@@ -29,6 +29,11 @@ export function getMonthlyLeaveTrend(leaves) {
   return months;
 }
 
+export function getTotalRemainingBalance(employee) {
+  const balances = employee.leaveBalances || [];
+  return balances.reduce((sum, balance) => sum + Number(balance.remainingBalance || 0), 0);
+}
+
 export function getBalanceBands(employees) {
   const bands = [
     { label: '0-5', min: 0, max: 5, count: 0 },
@@ -38,7 +43,7 @@ export function getBalanceBands(employees) {
   ];
 
   employees.forEach((employee) => {
-    const balance = Number(employee.leaveBalance || 0);
+    const balance = getTotalRemainingBalance(employee);
     const band = bands.find((item) => balance >= item.min && balance <= item.max);
     if (band) band.count += 1;
   });

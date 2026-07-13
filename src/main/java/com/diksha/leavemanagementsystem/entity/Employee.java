@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -36,9 +37,6 @@ public class Employee {
 
     private LocalDate joiningDate;
 
-    @Builder.Default
-    private Integer leaveBalance = 20;
-
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", unique = true)
     private User user;
@@ -51,6 +49,10 @@ public class Employee {
             cascade = CascadeType.ALL)
     private List<LeaveRequest> leaveRequests;
 
-
+    @OneToMany(mappedBy = "employee",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true)
+    @Builder.Default
+    private List<EmployeeLeaveBalance> leaveBalances = new ArrayList<>();
 
 }

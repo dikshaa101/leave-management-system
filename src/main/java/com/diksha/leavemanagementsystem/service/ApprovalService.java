@@ -16,6 +16,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -28,6 +29,7 @@ public class ApprovalService {
     private final EmployeeRepository employeeRepository;
     private final LeaveService leaveService;
     private final ApplicationEventPublisher eventPublisher;
+    private final EmployeeLeaveBalanceService employeeLeaveBalanceService;
 
     /**
      * Returns logged-in manager's company.
@@ -66,6 +68,7 @@ public class ApprovalService {
     /**
      * Approve leave request.
      */
+    @Transactional
     public String approveLeave(Long leaveId,
                                ApprovalRequestDto dto) {
 
@@ -91,15 +94,11 @@ public class ApprovalService {
                 leave.getStartDate(),
                 leave.getEndDate());
 
-        if (leaveDays > employee.getLeaveBalance()) {
-            throw new RuntimeException(
-                    "Employee does not have enough leave balance.");
-        }
+        employeeLeaveBalanceService.assertSufficientBalance(
+                employee, leave.getLeaveType(), leaveDays);
 
-        employee.setLeaveBalance(
-                employee.getLeaveBalance() - leaveDays);
-
-        employeeRepository.save(employee);
+        employeeLeaveBalanceService.deductBalance(
+                employee, leave.getLeaveType(), leaveDays);
 
         leave.setStatus(LeaveStatus.APPROVED);
         leave.setManagerRemarks(dto.getRemarks());
@@ -126,6 +125,7 @@ public class ApprovalService {
     /**
      * Reject leave request.
      */
+    @Transactional
     public String rejectLeave(Long leaveId,
                               ApprovalRequestDto dto) {
 

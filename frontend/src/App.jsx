@@ -8,6 +8,7 @@ import ApplyLeave from './pages/employee/ApplyLeave';
 import MyLeaves from './pages/employee/MyLeaves';
 import EmployeeProfile from './pages/employee/Profile';
 import EmployeeHolidays from './pages/employee/Holidays';
+import EmployeeLeaveBalances from './pages/employee/LeaveBalances';
 import ManagerDashboard from './pages/manager/Dashboard';
 import PendingLeaves from './pages/manager/PendingLeaves';
 import AllLeaves from './pages/manager/AllLeaves';
@@ -15,6 +16,7 @@ import Employees from './pages/manager/Employees';
 import TeamAvailability from './pages/manager/TeamAvailability';
 import ManagerProfile from './pages/manager/Profile';
 import ManagerHolidays from './pages/manager/Holidays';
+import ManagerLeavePolicies from './pages/manager/LeavePolicies';
 import './styles/global.css';
 import OAuth2Success from './pages/OAuth2Success';
 
@@ -76,6 +78,14 @@ export default function App() {
             }
           />
           <Route
+            path="/employee/balances"
+            element={
+              <ProtectedRoute allowedRoles={['EMPLOYEE']}>
+                <EmployeeLeaveBalances />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/employee/profile"
             element={
               <ProtectedRoute allowedRoles={['EMPLOYEE', 'MANAGER']}>
@@ -129,6 +139,14 @@ export default function App() {
             element={
               <ProtectedRoute allowedRoles={['MANAGER']}>
                 <ManagerHolidays />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/manager/leave-policies"
+            element={
+              <ProtectedRoute allowedRoles={['MANAGER']}>
+                <ManagerLeavePolicies />
               </ProtectedRoute>
             }
           />

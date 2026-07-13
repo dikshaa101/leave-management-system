@@ -10,6 +10,7 @@ import com.diksha.leavemanagementsystem.event.EmployeeRegisteredEvent;
 import com.diksha.leavemanagementsystem.exception.ResourceNotFoundException;
 import com.diksha.leavemanagementsystem.repository.EmployeeRepository;
 import com.diksha.leavemanagementsystem.repository.UserRepository;
+import com.diksha.leavemanagementsystem.service.EmployeeLeaveBalanceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.core.Authentication;
@@ -25,6 +26,7 @@ public class EmployeeAccountService {
     private final EmployeeRepository employeeRepository;
     private final PasswordEncoder passwordEncoder;
     private final ApplicationEventPublisher eventPublisher;
+    private final EmployeeLeaveBalanceService employeeLeaveBalanceService;
 
     public EmployeeResponseDto createEmployee(CreateEmployeeRequest request) {
 
@@ -61,7 +63,6 @@ public class EmployeeAccountService {
                 .department(request.getDepartment())
                 .designation(request.getDesignation())
                 .joiningDate(request.getJoiningDate())
-                .leaveBalance(20)
                 .company(company)
                 .user(employeeUser)
                 .build();
@@ -69,6 +70,8 @@ public class EmployeeAccountService {
         employeeUser.setEmployee(employee);
 
         userRepository.save(employeeUser);
+
+        employeeLeaveBalanceService.ensureBalancesForEmployee(employee);
 
         eventPublisher.publishEvent(
                 EmployeeRegisteredEvent.builder()
@@ -95,7 +98,7 @@ public class EmployeeAccountService {
                 .department(employee.getDepartment())
                 .designation(employee.getDesignation())
                 .joiningDate(employee.getJoiningDate())
-                .leaveBalance(employee.getLeaveBalance())
+                .leaveBalances(employeeLeaveBalanceService.getBalancesForEmployee(employee))
                 .build();
     }
 }

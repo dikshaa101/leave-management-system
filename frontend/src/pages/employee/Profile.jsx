@@ -7,6 +7,7 @@ const employeeLinks = [
   { to: '/employee/apply', label: 'Apply Leave' },
   { to: '/employee/leaves', label: 'My Leaves' },
   { to: '/employee/holidays', label: 'Holidays' },
+  { to: '/employee/balances', label: 'Leave Balances' },
   { to: '/employee/profile', label: 'Profile' },
 ];
 
@@ -25,8 +26,9 @@ export function ProfileContent() {
     { label: 'Department', value: profile.department },
     { label: 'Designation', value: profile.designation },
     { label: 'Joining Date', value: formatDate(profile.joiningDate) },
-    { label: 'Leave Balance', value: `${profile.leaveBalance} days` },
   ];
+
+  const balances = profile.leaveBalances || [];
 
   return (
     <>
@@ -44,6 +46,18 @@ export function ProfileContent() {
           ))}
         </div>
       </div>
+
+      {balances.length > 0 && (
+        <div className="stats-grid">
+          {balances.map((balance) => (
+            <div key={balance.leaveType} className="stat-card highlight">
+              <span className="stat-label">{balance.leaveType} Leave</span>
+              <span className="stat-value">{balance.remainingBalance}</span>
+              <span className="stat-hint">of {balance.totalAllocated} days remaining</span>
+            </div>
+          ))}
+        </div>
+      )}
     </>
   );
 }

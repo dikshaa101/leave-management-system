@@ -9,6 +9,7 @@ const employeeLinks = [
   { to: '/employee/apply', label: 'Apply Leave' },
   { to: '/employee/leaves', label: 'My Leaves' },
   { to: '/employee/holidays', label: 'Holidays' },
+  { to: '/employee/balances', label: 'Leave Balances' },
   { to: '/employee/profile', label: 'Profile' },
 ];
 
