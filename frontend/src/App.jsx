@@ -17,6 +17,7 @@ import TeamAvailability from './pages/manager/TeamAvailability';
 import ManagerProfile from './pages/manager/Profile';
 import ManagerHolidays from './pages/manager/Holidays';
 import ManagerLeavePolicies from './pages/manager/LeavePolicies';
+import ManagerReports from './pages/manager/Reports';
 import './styles/global.css';
 import OAuth2Success from './pages/OAuth2Success';
 
@@ -147,6 +148,14 @@ export default function App() {
             element={
               <ProtectedRoute allowedRoles={['MANAGER']}>
                 <ManagerLeavePolicies />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/manager/reports"
+            element={
+              <ProtectedRoute allowedRoles={['MANAGER']}>
+                <ManagerReports />
               </ProtectedRoute>
             }
           />

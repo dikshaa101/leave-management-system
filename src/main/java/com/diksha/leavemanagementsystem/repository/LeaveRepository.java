@@ -6,12 +6,13 @@ import com.diksha.leavemanagementsystem.entity.LeaveRequest;
 import com.diksha.leavemanagementsystem.entity.LeaveStatus;
 import com.diksha.leavemanagementsystem.entity.LeaveType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-public interface LeaveRepository extends JpaRepository<LeaveRequest, Long> {
+public interface LeaveRepository extends JpaRepository<LeaveRequest, Long>, JpaSpecificationExecutor<LeaveRequest> {
 
     List<LeaveRequest> findByEmployee(Employee employee);
 
