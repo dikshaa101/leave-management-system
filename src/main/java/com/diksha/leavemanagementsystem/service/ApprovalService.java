@@ -18,7 +18,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Service
@@ -87,10 +86,10 @@ public class ApprovalService {
 
         Employee employee = leave.getEmployee();
 
-        int leaveDays = (int) (
-                ChronoUnit.DAYS.between(
-                        leave.getStartDate(),
-                        leave.getEndDate()) + 1);
+        int leaveDays = (int) leaveService.calculateLeaveDays(
+                employee.getCompany(),
+                leave.getStartDate(),
+                leave.getEndDate());
 
         if (leaveDays > employee.getLeaveBalance()) {
             throw new RuntimeException(
@@ -151,9 +150,10 @@ public class ApprovalService {
 
         leaveRepository.save(leave);
 
-        long leaveDays = ChronoUnit.DAYS.between(
+        long leaveDays = leaveService.calculateLeaveDays(
+                leave.getEmployee().getCompany(),
                 leave.getStartDate(),
-                leave.getEndDate()) + 1;
+                leave.getEndDate());
 
         eventPublisher.publishEvent(
                 LeaveRejectedEvent.builder()

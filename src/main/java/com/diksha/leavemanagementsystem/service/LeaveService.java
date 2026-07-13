@@ -13,6 +13,7 @@ import com.diksha.leavemanagementsystem.exception.ResourceNotFoundException;
 import com.diksha.leavemanagementsystem.repository.EmployeeRepository;
 import com.diksha.leavemanagementsystem.repository.LeaveRepository;
 import com.diksha.leavemanagementsystem.repository.UserRepository;
+import com.diksha.leavemanagementsystem.util.DateUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.core.Authentication;
@@ -20,7 +21,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Service
@@ -31,6 +31,7 @@ public class LeaveService {
     private final EmployeeRepository employeeRepository;
     private final UserRepository userRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final HolidayService holidayService;
 
     /**
      * Returns logged-in user's company.
@@ -77,6 +78,7 @@ public class LeaveService {
         }
 
         long leaveDays = calculateLeaveDays(
+                employee.getCompany(),
                 dto.getStartDate(),
                 dto.getEndDate());
 
@@ -224,6 +226,7 @@ public class LeaveService {
                 .appliedOn(leave.getAppliedOn())
                 .employeeName(leave.getEmployee().getFullName())
                 .totalDays(calculateLeaveDays(
+                        leave.getEmployee().getCompany(),
                         leave.getStartDate(),
                         leave.getEndDate()))
                 .managerRemarks(leave.getManagerRemarks())
@@ -231,10 +234,19 @@ public class LeaveService {
                 .build();
     }
 
-    private long calculateLeaveDays(LocalDate startDate,
-                                    LocalDate endDate) {
+    /**
+     * Calculates leave days inclusive of start/end date, excluding any
+     * company holidays that fall within the range. E.g. 22-26 Dec with
+     * 25 Dec marked as a holiday resolves to 4 days, not 5.
+     */
+    long calculateLeaveDays(Company company,
+                             LocalDate startDate,
+                             LocalDate endDate) {
 
-        return ChronoUnit.DAYS.between(startDate, endDate) + 1;
+        var holidayDates =
+                holidayService.getHolidayDatesInRange(company, startDate, endDate);
+
+        return DateUtils.calculateLeaveDays(startDate, endDate, holidayDates);
     }
 
 }
